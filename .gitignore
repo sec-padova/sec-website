@@ -9,6 +9,7 @@ GEMINI.md
 # Future build and local environment files
 node_modules/
 dist/
+*.tsbuildinfo
 .env
 .env.*
 !.env.example

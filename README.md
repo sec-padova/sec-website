@@ -1,49 +1,42 @@
-# Student Entrepreneurs Club landing page
+# Student Entrepreneurs Club
 
-A static draft with no build dependencies for a student led University of Padova club. Open `index.html` in a browser, or serve this directory with any static file server. The page loads Google Fonts and has local font fallbacks.
+Student led community at the University of Padova. This repository contains the public landing page, now built with React, TypeScript, and Vite. Registration and member profiles are planned but are not live yet.
 
-## Confirmed direction
+## Local development
 
-- Use plain HTML, CSS, and JavaScript only if interaction becomes necessary.
-- Host on Netlify or Vercel; the domain is still undecided.
-- Use English and a bold, energetic, student led visual style.
-- Make **Join the club** the primary action. The signup destination will be decided later, so the current links lead to a clearly marked placeholder section.
-- Feature events, networking, and student projects as activities available at launch.
-- Focus on students while welcoming anyone interested in participating.
-- Name University of Padova and [M31](https://www.m31.com/) as approved collaborators.
-- Include an expandable, scrollable directory for every club participant, with a placeholder until names are supplied. Social links remain placeholders.
+Use Node.js 20.19+ or 22.12+.
 
-## Current assumptions
-
-- The public name is **Student Entrepreneurs Club**, as used on the [launch event](https://luma.com/pf6b3exb).
-- The geometric mark and matching favicon are draft artwork, pending any official logo.
-- The Luma launch page is the only verified public destination. It is described as a launch event rather than an upcoming event.
-- The page describes collaborating professors in general terms until individual names are confirmed.
-
-## Details needed before launch
-
-1. Replace the join placeholder with the exact form or community URL when chosen.
-2. Add public member names to `members.js` and replace the social placeholders with real links.
-3. Provide any existing brand assets and individual professor names if desired.
-4. Decide the domain and who will maintain events and projects.
-
-The site uses plain HTML, CSS, and a small JavaScript file for the member directory. It can be hosted on GitHub Pages, Netlify, Vercel, or a university web server without a build step.
-
-## Updating the member directory
-
-Add one object per participant to `members.js`:
-
-```js
-window.clubMembers = [
-  { name: "Ada Example", department: "Engineering", github: "https://github.com/ada-example" },
-  { name: "Marco Example", department: "Design" },
-];
+```sh
+npm ci
+npm run dev
 ```
 
-Only `name` is required. `department` and `github` are optional. Add only details approved for public display. The directory sorts names alphabetically and scrolls within a fixed-height panel as it grows.
+Run the test suite and production build before each milestone review:
 
-The eight visible rows are clearly labeled placeholders. As soon as at least one member is added to `members.js`, the script replaces them with the real roster and updates the count.
+```sh
+npm test
+npm run build
+```
 
-## Proposed GitHub organization
+## Hosting
 
-Use **Student Entrepreneurs Club** as the display name and consider `student-entrepreneurs-padova` as the organization handle. `sec-padova` is a shorter alternative. Check availability in GitHub's organization creation form before choosing; this repository does not contain an organization link yet.
+`netlify.toml` builds with `npm run build` and publishes `dist`. The rewrite serves the React app if client-side routes are introduced. Connect the `sec-padova/sec-website` repository to a Netlify site when ready to deploy. The domain is still undecided.
+
+## Member directory
+
+The public directory is expandable and scrollable. It currently shows placeholders. `src/members.ts` contains no personal data. Future Supabase integration will supply only approved members who explicitly opt in to public display. Do not add a private roster to the source code.
+
+## Development roadmap
+
+The baseline static site is committed on `main`. Work proceeds through `develop`, reviewed `feature/*` branches, and a release branch. Each milestone is reviewed and committed by the repository owner before the next begins.
+
+1. React and TypeScript shell with the existing landing page and Netlify build.
+2. Supabase PostgreSQL schema, Auth client, row-level security, and access tests.
+3. Student and external registration, email verification, sign-in, and password reset.
+4. Organizer approval with an audit record.
+5. Private member profile editing and opt-in public directory.
+6. Netlify release and end-to-end verification over HTTPS.
+
+Supabase Auth will manage passwords. The browser will use only a publishable key; service keys and database credentials must remain outside the repository. Membership will require organizer approval, and profiles will remain private until a member explicitly opts in to the public directory.
+
+The project catalogue and blog are future features and are intentionally absent from this first membership release.
