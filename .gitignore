@@ -1,0 +1,14 @@
+# Local agent notes and workspace state
+PLAN.md
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.agents/
+.codex/
+
+# Future build and local environment files
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
