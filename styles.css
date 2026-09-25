@@ -106,6 +106,26 @@ em { font-style: normal; color: #6e57c3; }
 .feature-card h3 { margin-bottom: 12px; font-size: 2rem; line-height: 1.05; }
 .feature-card p { margin: 0; max-width: 290px; line-height: 1.5; font-size: .95rem; }
 
+.events { background: var(--paper); }
+.event-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.event-card, .events-empty { display: grid; grid-template-columns: minmax(150px, .23fr) minmax(0, 1fr) auto; align-items: center; gap: clamp(24px, 4vw, 70px); min-height: 220px; padding: clamp(28px, 4vw, 52px); border: 1px solid var(--ink); background: #e5e6d8; }
+.event-card:nth-child(3n + 2) { background: var(--violet); }
+.event-card:nth-child(3n) { background: var(--green); }
+.event-list .event-card-past { background: #e0e0da; color: #4c5550; border-color: #8c948e; }
+.event-card-past .event-link { background: #4c5550; }
+.event-card-past .event-date { border-color: rgba(76, 85, 80, .3); }
+.event-date { display: flex; flex-direction: column; gap: 6px; align-self: stretch; justify-content: center; border-right: 1px solid var(--line); padding-right: 24px; }
+.event-date-label, .event-location { margin: 0 0 10px; font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.event-date time { font-family: 'Space Grotesk', Arial, sans-serif; font-size: clamp(1.5rem, 2.2vw, 2.3rem); font-weight: 700; letter-spacing: -.055em; line-height: 1; }
+.event-date > span:last-child { font-size: .8rem; font-weight: 600; }
+.event-details h3, .events-empty h3 { margin-bottom: 12px; font-size: clamp(1.7rem, 2.5vw, 2.7rem); line-height: 1.05; }
+.event-details > p:last-child, .events-empty > div > p:last-child { max-width: 550px; margin: 0; font-size: .95rem; line-height: 1.55; }
+.event-link { display: inline-flex; align-items: center; justify-content: space-between; gap: 25px; min-width: 170px; padding: 16px 20px; border-radius: 100px; background: var(--ink); color: var(--paper); font-size: .84rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: transform .2s ease; }
+.event-link:hover { transform: translateY(-3px); }
+.event-link span { font-size: 1.2em; }
+.events-empty { margin-top: 12px; background: var(--green); }
+.events-empty-mark { font-family: 'Space Grotesk', Arial, sans-serif; font-size: clamp(5rem, 9vw, 9rem); line-height: 1; }
+
 .community { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(60px, 10vw, 160px); align-items: center; }
 .community-art { position: relative; min-height: 510px; border-radius: 50% 50% 4px 4px; overflow: hidden; background: var(--orange); }
 .community-orbit { position: absolute; width: 350px; height: 350px; border-radius: 50%; border: 1px solid rgba(23, 33, 29, .45); left: 50%; top: 50%; transform: translate(-50%, -50%); }
@@ -192,6 +212,12 @@ em { font-style: normal; color: #6e57c3; }
   .community { gap: 55px; }
 }
 
+@media (max-width: 900px) {
+  .site-header { justify-content: space-between; }
+  .main-nav { display: none; }
+  .header-cta { margin-left: 0; }
+}
+
 @media (max-width: 760px) {
   .section-wrap, .site-header { width: min(100% - 36px, 1400px); }
   .site-header { min-height: 88px; justify-content: space-between; }
@@ -210,6 +236,10 @@ em { font-style: normal; color: #6e57c3; }
   .feature-grid { grid-template-columns: 1fr; }
   .feature-card { min-height: 360px; }
   .feature-symbol { font-size: 7rem; }
+  .event-card, .events-empty { grid-template-columns: minmax(0, 1fr) auto; }
+  .event-date, .events-empty-mark { grid-column: 1 / -1; }
+  .event-date { padding: 0 0 20px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .events-empty-mark { font-size: 5rem; }
   .community-art { min-height: 490px; }
   .community-copy { order: -1; }
 }
@@ -227,6 +257,9 @@ em { font-style: normal; color: #6e57c3; }
   .art-caption { font-size: .5rem; }
   .community-art { min-height: 390px; }
   .community-word { font-size: 3.7rem; }
+  .event-card, .events-empty { grid-template-columns: 1fr; gap: 22px; }
+  .event-date, .events-empty-mark { grid-column: 1; }
+  .event-link { width: fit-content; }
   .collaborators { grid-template-columns: 1fr; }
   .collaborators a { min-height: 82px; }
   .member-directory summary { min-height: 94px; padding: 18px; }
@@ -245,5 +278,5 @@ em { font-style: normal; color: #6e57c3; }
 
 @media (prefers-reduced-motion: reduce) {
   :root { scroll-behavior: auto; }
-  .header-cta, .button, .feature-card, .directory-toggle { transition: none; }
+  .header-cta, .button, .feature-card, .directory-toggle, .event-link { transition: none; }
 }

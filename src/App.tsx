@@ -1,5 +1,7 @@
 import MemberDirectory from "./MemberDirectory"
 import InterestForm from "./components/InterestForm"
+import ClubEvents from "./ClubEvents"
+import { events } from "./events"
 import { supabase } from "./lib/supabase"
 import { members } from "./members"
 
@@ -16,6 +18,7 @@ export default function App() {
       <nav className="main-nav" aria-label="Main navigation">
         <a href="#about">About</a>
         <a href="#what-we-do">What we do</a>
+        <a href="#events">Events</a>
         <a href="#community">Community</a>
         <a href="#team">People</a>
       </nav>
@@ -112,6 +115,8 @@ export default function App() {
         </div>
       </section>
 
+      <ClubEvents events={events} />
+
       <section className="community section-wrap section-pad" id="community" aria-labelledby="community-title">
         <div className="community-art" aria-hidden="true">
           <span className="community-orbit orbit-a"></span>
@@ -125,7 +130,7 @@ export default function App() {
           <span className="community-word">YOU<br />BELONG<br />HERE<span>.</span></span>
         </div>
         <div className="community-copy">
-          <p className="eyebrow">03 / Who it’s for</p>
+          <p className="eyebrow">04 / Who it’s for</p>
           <h2 id="community-title">Bring your<br /><em>curiosity.</em></h2>
           <p>
             You might have a big idea, a half formed question, or simply an interest in meeting
@@ -162,7 +167,7 @@ export default function App() {
       <section className="team section-wrap section-pad" id="team" aria-labelledby="team-title">
         <div className="section-heading-row">
           <div>
-            <p className="eyebrow">04 / The people</p>
+            <p className="eyebrow">05 / The people</p>
             <h2 id="team-title">A club made of<br /><em>different minds.</em></h2>
           </div>
           <p>Every person brings a new perspective. Meet the students and curious people building this community together.</p>

@@ -15,6 +15,10 @@ npm run build
 
 The frontend uses React, TypeScript, and Vite. `netlify.toml` builds with `npm run build` and publishes `dist`.
 
+## Upcoming events
+
+Add events approved for display to `src/events.ts`. Each entry needs a title, `startsAt` date and time with a timezone offset, location, short description, and HTTPS event or registration URL. Use `endsAt` when an event should remain visible until it finishes. The page shows the three most recent completed events in gray before upcoming events sorted by start time. Incomplete entries stay hidden. Dates and times are displayed in the Padova timezone. An empty upcoming list shows a "details coming soon" message instead of a fabricated event. If the event platform hides the address until registration, keep it out of the source file too. Use canonical event URLs without invite or tracking parameters.
+
 ## Local database
 
 Start Docker Desktop, then run:
