@@ -25,20 +25,28 @@ npm run db:test
 npm run db:stop
 ```
 
-`npm run db:reset` recreates only the local Supabase database from the migrations and removes local data. Database tests cover profile privacy, organizer privileges, approval protection, public directory opt-in, and allowed department values.
+`npm run db:reset` recreates only the local Supabase database from the migrations and removes local data. Database tests cover interest-list privacy and idempotence, plus the future member data model's profile privacy, organizer privileges, approval protection, public directory opt-in, and allowed department values.
 
 Copy `.env.example` to `.env.local` and fill in the project URL and browser-safe publishable key. Vite exposes variables prefixed with `VITE_` to the browser. Never put a Supabase secret key, database password, or service-role key in those variables or in Git.
 
 ## Membership data
 
-Supabase Auth manages credentials. `public.member_profiles` stores club details and starts each person in `pending` status with public directory opt-in off. Organizers are listed in `public.organizers`; a project owner grants the first organizer by adding the existing Auth user ID through the SQL editor. Do not add an organizer grant to browser code.
+The member data model is reserved for the invitation phase. Supabase Auth will manage credentials when accounts open. `public.member_profiles` stores club details and starts each person in `pending` status with public directory opt-in off. Organizers are listed in `public.organizers`; a project owner grants the first organizer by adding the existing Auth user ID through the SQL editor. Do not add an organizer grant to browser code.
 
-Department is optional for students and external members. Use the shared select component in the registration form, with options from `public.unipd_departments`; the database rejects values outside that list. Its 32 English names follow the [University of Padova department list](https://www.unipd.it/en/dipartimenti), checked on 25 September 2026. Review the list when the university changes its departments.
+Department will be optional for students and external members when profiles open. Use the shared select component in profile onboarding, with options from `public.unipd_departments`; the database rejects values outside that list. Its 32 English names follow the [University of Padova department list](https://www.unipd.it/en/dipartimenti), checked on 25 September 2026. Review the list when the university changes its departments.
 
 The public directory contains only approved members who explicitly opt in. Do not add a private member roster to source files.
 
+## Interest list
+
+The Join section accepts only an email address when `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are configured. Without them it shows a setup message. The browser calls `public.join_interest_list`, which normalizes the address and stores it in `private.club_interest`. Duplicate requests succeed without revealing whether an address was already submitted. Anonymous visitors cannot read, update, or delete the list. No Auth user, password, or member profile is created.
+
+The public list is currently an expression of interest, not a verified newsletter subscription. It does not send mail. Before sending routine updates, add an email ownership confirmation and unsubscribe process. Publish a privacy notice with the club's contact, purpose, retention period, and removal route before collecting real addresses. Do not export or commit addresses to Git.
+
+Local Supabase config disables public Auth sign-ups at the project level while leaving the email provider enabled for future invitations. Turn off **Allow new users to sign up** in the hosted Supabase Auth settings too; a hidden frontend form does not prevent direct Auth API calls. When organizers are ready, build a server-side invitation flow using `inviteUserByEmail`, then collect name, student/external status, optional department and school, and any account credentials during invited onboarding. Keep the Supabase secret key only on a trusted server.
+
 ## Hosted configuration
 
-Connect the organization-owned `sec-padova/sec-website` repository to Netlify. Connect the Supabase project to the same GitHub organization repository when ready to deploy reviewed migrations from `main`. Configure email confirmation, approved redirect URLs, and a production SMTP sender before opening registration. The local Supabase setup sends email to Mailpit.
+Connect the organization-owned `sec-padova/sec-website` repository to Netlify. Connect the Supabase project to the same GitHub organization repository when ready to deploy reviewed migrations from `main`. Apply the member foundation and interest-list migrations before setting Netlify's browser-safe Supabase environment variables. Disable hosted public Auth sign-ups before publishing the list. The invitation and account flow is a later milestone.
 
 Use `develop`, reviewed `feature/*` branches, and a release branch. Merge tested releases to `main` for production deployment.

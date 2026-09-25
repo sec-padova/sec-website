@@ -1,4 +1,6 @@
 import MemberDirectory from "./MemberDirectory"
+import InterestForm from "./components/InterestForm"
+import { supabase } from "./lib/supabase"
 import { members } from "./members"
 
 export default function App() {
@@ -18,7 +20,7 @@ export default function App() {
         <a href="#team">People</a>
       </nav>
       <a className="header-cta" href="#join">
-        Join the club <span aria-hidden="true">↘</span>
+        Join the list <span aria-hidden="true">↘</span>
       </a>
     </header>
 
@@ -32,10 +34,7 @@ export default function App() {
             meet across disciplines, and turn curiosity into projects they lead themselves.
           </p>
           <div className="hero-actions">
-            <a className="button button-dark" href="#join">Join the club <span aria-hidden="true">↘</span></a>
-            <a className="text-link" href="https://luma.com/pf6b3exb" target="_blank" rel="noopener noreferrer">
-              View our launch event <span aria-hidden="true">↗</span>
-            </a>
+            <a className="button button-dark" href="#join">Join the interest list <span aria-hidden="true">↘</span></a>
           </div>
         </div>
         <div className="hero-art" role="img" aria-label="Different fields of study connected around a shared idea">
@@ -175,9 +174,11 @@ export default function App() {
         <div className="section-wrap">
           <p className="eyebrow">The conversation starts here</p>
           <h2 id="cta-title">The next idea<br />needs <em>you.</em></h2>
-          <p>Join a community of curious students and builders in Padova. Everyone interested in exploring and creating together is welcome.</p>
-          <p className="join-status" role="status">Join link coming soon</p>
-          <a className="text-link" href="https://luma.com/pf6b3exb" target="_blank" rel="noopener noreferrer">Explore our launch event <span aria-hidden="true">↗</span></a>
+          <p>Curious about joining a community of students and builders in Padova? Leave your email and we may invite you when membership opens.</p>
+          <div className="interest-wrap">
+            <h3>Join the interest list</h3>
+            <InterestForm client={supabase} />
+          </div>
         </div>
       </section>
     </main>
@@ -189,7 +190,7 @@ export default function App() {
           <span className="brand-name">Student<br />Entrepreneurs Club</span>
         </a>
         <p>Curiosity is better together.<br />Padova, Italy.</p>
-        <p className="social-placeholder">Social channels<br />coming soon.</p>
+        <a className="social-link" href="https://github.com/sec-padova" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
         <a href="#top">Back to top ↑</a>
       </div>
     </footer>
