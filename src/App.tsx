@@ -20,7 +20,7 @@ export default function App() {
         <a href="#team">People</a>
       </nav>
       <a className="header-cta" href="#join">
-        Join the list <span aria-hidden="true">↘</span>
+        Join the list <span aria-hidden="true">↘︎</span>
       </a>
     </header>
 
@@ -34,7 +34,7 @@ export default function App() {
             meet across disciplines, and turn curiosity into projects they lead themselves.
           </p>
           <div className="hero-actions">
-            <a className="button button-dark" href="#join">Join the interest list <span aria-hidden="true">↘</span></a>
+            <a className="button button-dark" href="#join">Join the interest list <span aria-hidden="true">↘︎</span></a>
           </div>
         </div>
         <div className="hero-art" role="img" aria-label="Different fields of study connected around a shared idea">
@@ -49,16 +49,16 @@ export default function App() {
           <span className="art-node node-science">science</span>
           <span className="art-node node-humanities">humanities</span>
           <span className="art-center">What if<br />we built it?</span>
-          <span className="art-star art-star-one" aria-hidden="true">✳</span>
-          <span className="art-star art-star-two" aria-hidden="true">✳</span>
+          <span className="art-star art-star-one" aria-hidden="true">✳︎</span>
+          <span className="art-star art-star-two" aria-hidden="true">✳︎</span>
           <span className="art-caption">DIFFERENT MINDS. SHARED MOMENTUM.</span>
         </div>
       </section>
 
       <div className="ticker" aria-label="Explore, connect, create">
         <div className="ticker-inner" aria-hidden="true">
-          <span>EXPLORE <b>✳</b> CONNECT <b>✳</b> CREATE <b>✳</b></span>
-          <span>EXPLORE <b>✳</b> CONNECT <b>✳</b> CREATE <b>✳</b></span>
+          <span>EXPLORE <b>✳︎</b> CONNECT <b>✳︎</b> CREATE <b>✳︎</b></span>
+          <span>EXPLORE <b>✳︎</b> CONNECT <b>✳︎</b> CREATE <b>✳︎</b></span>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export default function App() {
             This is a student led club for the curious, the builders, and everyone in between.
             Your course of study is a starting point, not a boundary.
           </p>
-          <a className="inline-arrow" href="#what-we-do">See how it works <span aria-hidden="true">↘</span></a>
+          <a className="inline-arrow" href="#what-we-do">See how it works <span aria-hidden="true">↘︎</span></a>
         </div>
       </section>
 
@@ -91,20 +91,20 @@ export default function App() {
           </div>
           <div className="feature-grid">
             <article className="feature-card">
-              <div className="feature-top"><span>01</span><span aria-hidden="true">↗</span></div>
-              <div className="feature-symbol" aria-hidden="true">✳</div>
+              <div className="feature-top"><span>01</span><span aria-hidden="true">↗︎</span></div>
+              <div className="feature-symbol" aria-hidden="true">✳︎</div>
               <h3>Come to events</h3>
               <p>Get closer to the startup world through events, conversations, and people willing to share what they’ve learned.</p>
             </article>
             <article className="feature-card">
-              <div className="feature-top"><span>02</span><span aria-hidden="true">↗</span></div>
+              <div className="feature-top"><span>02</span><span aria-hidden="true">↗︎</span></div>
               <div className="feature-symbol intersect" aria-hidden="true"><i></i><i></i></div>
               <h3>Meet your people</h3>
               <p>Network with students from other departments and bring different skills and perspectives to the same table.</p>
             </article>
             <article className="feature-card">
-              <div className="feature-top"><span>03</span><span aria-hidden="true">↗</span></div>
-              <div className="feature-symbol arrow-symbol" aria-hidden="true">↗</div>
+              <div className="feature-top"><span>03</span><span aria-hidden="true">↗︎</span></div>
+              <div className="feature-symbol arrow-symbol" aria-hidden="true">↗︎</div>
               <h3>Build together</h3>
               <p>Turn a shared question into a multidisciplinary project, shaped and managed by the students building it.</p>
             </article>
@@ -150,10 +150,10 @@ export default function App() {
           </p>
           <div className="collaborators" aria-label="Club collaborators">
             <a href="https://www.unipd.it/en" target="_blank" rel="noopener noreferrer">
-              <span>University of Padova</span><span aria-hidden="true">↗</span>
+              <span>University of Padova</span><span aria-hidden="true">↗︎</span>
             </a>
             <a href="https://www.m31.com/" target="_blank" rel="noopener noreferrer">
-              <span>M31</span><span aria-hidden="true">↗</span>
+              <span>M31</span><span aria-hidden="true">↗︎</span>
             </a>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function App() {
           <span className="brand-name">Student<br />Entrepreneurs Club</span>
         </a>
         <p>Curiosity is better together.<br />Padova, Italy.</p>
-        <a className="social-link" href="https://github.com/sec-padova" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+        <a className="social-link" href="https://github.com/sec-padova" target="_blank" rel="noopener noreferrer">GitHub ↗︎</a>
         <a href="#top">Back to top ↑</a>
       </div>
     </footer>

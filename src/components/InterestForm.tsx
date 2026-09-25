@@ -52,7 +52,7 @@ export default function InterestForm({ client }: Props) {
       </div>
       <p className="form-help">Leave your email to hear from us when club membership opens.</p>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <button className="button button-dark" type="submit" disabled={submitting}>{submitting ? 'Adding your email…' : 'Join the interest list'} <span aria-hidden="true">↗</span></button>
+      <button className="button button-dark" type="submit" disabled={submitting}>{submitting ? 'Adding your email…' : 'Join the interest list'} <span aria-hidden="true">↗︎</span></button>
     </form>
   )
 }

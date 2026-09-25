@@ -119,7 +119,7 @@ em { font-style: normal; color: #6e57c3; }
 .community-copy > p:not(.eyebrow) { max-width: 480px; font-size: 1.1rem; line-height: 1.6; }
 .community-list { list-style: none; max-width: 500px; padding: 0; margin: 32px 0 0; }
 .community-list li { padding: 15px 0; border-top: 1px solid var(--line); font-size: .95rem; font-weight: 700; }
-.community-list li::before { content: '✳'; color: #6e57c3; margin-right: 15px; }
+.community-list li::before { content: '✳︎'; color: #6e57c3; margin-right: 15px; }
 .community-list li:last-child { border-bottom: 1px solid var(--line); }
 
 .connection { background: var(--ink); color: var(--paper); }

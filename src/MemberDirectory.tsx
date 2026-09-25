@@ -48,7 +48,7 @@ export default function MemberDirectory({ members }: Props) {
                     <strong>{name}</strong>
                     {member.department?.trim() && <small>{member.department.trim()}</small>}
                   </span>
-                  {github && <a href={github} target="_blank" rel="noopener noreferrer" aria-label={`${name} on GitHub (opens in a new tab)`}>GitHub ↗</a>}
+                  {github && <a href={github} target="_blank" rel="noopener noreferrer" aria-label={`${name} on GitHub (opens in a new tab)`}>GitHub ↗︎</a>}
                 </li>
               )
             }) : Array.from({ length: 8 }, (_, index) => (
