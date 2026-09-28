@@ -3,6 +3,12 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { describe, expect, it, vi } from 'vitest'
 import InterestForm from './InterestForm'
 
+const consentPayload = { p_privacy_notice_version: '2026-09-28', p_consent: true }
+
+function giveConsent() {
+  fireEvent.click(screen.getByRole('checkbox', { name: /I consent to the club/i }))
+}
+
 function mockClient() {
   const rpc = vi.fn().mockResolvedValue({ data: null, error: null })
   return { client: { rpc } as unknown as SupabaseClient, rpc }
@@ -23,12 +29,17 @@ describe('club interest list', () => {
     expect(screen.getByRole('textbox', { name: 'Phone number (optional)' })).not.toBeRequired()
     expect(screen.getByRole('combobox', { name: 'Country code' })).not.toBeRequired()
     expect(screen.getByRole('combobox', { name: 'Country code' })).toHaveValue('IT')
+    expect(screen.getByRole('checkbox', { name: /I consent to the club/i })).toBeRequired()
+    expect(screen.getByRole('checkbox', { name: /I consent to the club/i })).not.toBeChecked()
+    expect(screen.getByRole('link', { name: 'privacy notice' })).toHaveAttribute('href', '/privacy')
+    expect(screen.getByRole('link', { name: 'privacy notice' })).toHaveAttribute('target', '_blank')
     expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/first name|last name|department|school|student/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/create an account/i)).not.toBeInTheDocument()
     fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), { target: { value: ' Ada@Example.com ' } })
+    giveConsent()
     fireEvent.click(screen.getByRole('button', { name: 'Join the interest list' }))
-    await waitFor(() => expect(rpc).toHaveBeenCalledWith('join_interest_list', { p_email: 'ada@example.com', p_phone_number: null }))
+    await waitFor(() => expect(rpc).toHaveBeenCalledWith('join_interest_list', { p_email: 'ada@example.com', p_phone_number: null, ...consentPayload }))
     expect(screen.getByRole('status')).toHaveTextContent(/invitation to join the club later/i)
     expect(screen.getByRole('status')).not.toHaveTextContent(/account/i)
   })
@@ -48,8 +59,9 @@ describe('club interest list', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), { target: { value: 'ada@example.com' } })
     fireEvent.change(screen.getByRole('combobox', { name: 'Country code' }), { target: { value: country } })
     fireEvent.change(screen.getByRole('textbox', { name: 'Phone number (optional)' }), { target: { value: phone } })
+    giveConsent()
     fireEvent.click(screen.getByRole('button', { name: 'Join the interest list' }))
-    await waitFor(() => expect(rpc).toHaveBeenCalledWith('join_interest_list', { p_email: 'ada@example.com', p_phone_number: normalized }))
+    await waitFor(() => expect(rpc).toHaveBeenCalledWith('join_interest_list', { p_email: 'ada@example.com', p_phone_number: normalized, ...consentPayload }))
     expect(screen.getByRole('status')).toHaveTextContent('Thanks for your interest')
   })
 
@@ -72,11 +84,12 @@ describe('club interest list', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), { target: { value: 'ada@example.com' } })
     const phoneInput = screen.getByRole('textbox', { name: 'Phone number (optional)' })
     fireEvent.change(phoneInput, { target: { value: '123' } })
+    giveConsent()
     fireEvent.click(screen.getByRole('button', { name: 'Join the interest list' }))
     expect(screen.getByRole('alert')).toBeInTheDocument()
     fireEvent.change(phoneInput, { target: { value: '' } })
     fireEvent.click(screen.getByRole('button', { name: 'Join the interest list' }))
-    await waitFor(() => expect(rpc).toHaveBeenCalledWith('join_interest_list', { p_email: 'ada@example.com', p_phone_number: null }))
+    await waitFor(() => expect(rpc).toHaveBeenCalledWith('join_interest_list', { p_email: 'ada@example.com', p_phone_number: null, ...consentPayload }))
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
@@ -89,11 +102,29 @@ describe('club interest list', () => {
     expect(rpc).not.toHaveBeenCalled()
   })
 
+  it('requires explicit consent and allows correction without losing entered details', async () => {
+    const { client, rpc } = mockClient()
+    render(<InterestForm client={client} />)
+    fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), { target: { value: 'ada@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Join the interest list' }))
+    const consent = screen.getByRole('checkbox', { name: /I consent to the club/i })
+    expect(screen.getByRole('alert')).toHaveTextContent('Please give your consent')
+    expect(consent).toHaveAttribute('aria-invalid', 'true')
+    expect(consent).toHaveFocus()
+    expect(rpc).not.toHaveBeenCalled()
+    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('ada@example.com')
+    giveConsent()
+    fireEvent.click(screen.getByRole('button', { name: 'Join the interest list' }))
+    await waitFor(() => expect(rpc).toHaveBeenCalledWith('join_interest_list', { p_email: 'ada@example.com', p_phone_number: null, ...consentPayload }))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('does not expose database errors to the visitor', async () => {
     const { client, rpc } = mockClient()
     rpc.mockResolvedValueOnce({ data: null, error: new Error('private table: internal failure') })
     render(<InterestForm client={client} />)
     fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), { target: { value: 'ada@example.com' } })
+    giveConsent()
     fireEvent.click(screen.getByRole('button', { name: 'Join the interest list' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not add your email')
     expect(screen.queryByText(/private table/)).not.toBeInTheDocument()

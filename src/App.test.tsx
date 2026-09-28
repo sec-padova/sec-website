@@ -35,4 +35,17 @@ describe('landing page', () => {
     expect(screen.getAllByRole('link', { name: /join the (interest )?list/i }).every((link) => link.getAttribute('href') === '#join')).toBe(true)
     expect(screen.getByRole('status')).toHaveTextContent('The interest list is being set up')
   })
+
+  it('serves the privacy notice directly with contact and retention information', () => {
+    window.history.replaceState({}, '', '/privacy')
+    try {
+      render(<App />)
+      expect(screen.getByRole('heading', { level: 1, name: 'Privacy notice' })).toBeInTheDocument()
+      expect(screen.getAllByRole('link', { name: 'm.bustaffa@gmail.com' })[0]).toHaveAttribute('href', 'mailto:m.bustaffa@gmail.com')
+      expect(screen.getByText(/maximum of 12 months from your original submission/i)).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Back to the interest list' })).toHaveAttribute('href', '/#join')
+    } finally {
+      window.history.replaceState({}, '', '/')
+    }
+  })
 })

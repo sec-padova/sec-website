@@ -4,8 +4,13 @@ import ClubEvents from "./ClubEvents"
 import { events } from "./events"
 import { supabase } from "./lib/supabase"
 import { members } from "./members"
+import PrivacyPage from "./PrivacyPage"
 
 export default function App() {
+  if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy/') {
+    return <PrivacyPage />
+  }
+
   return (
     <>
     <a className="skip-link" href="#main">Skip to content</a>
@@ -181,7 +186,6 @@ export default function App() {
             <p className="eyebrow">The conversation starts here</p>
             <h2 id="cta-title">The next idea<br />needs <em>you.</em></h2>
             <p className="join-description">Curious about joining a community of students and builders in Padova? Leave your email to hear from us when membership opens.</p>
-            <div className="join-signoff"><span aria-hidden="true">✳</span> A little curiosity goes a long way.</div>
           </div>
           <div className="interest-wrap">
             <div className="interest-card-top"><p className="eyebrow">Let’s stay in touch</p><span className="interest-card-mark" aria-hidden="true">↗</span></div>
@@ -201,6 +205,7 @@ export default function App() {
         </a>
         <p>Curiosity is better together.<br />Padova, Italy.</p>
         <a className="social-link" href="https://github.com/sec-padova" target="_blank" rel="noopener noreferrer">GitHub ↗︎</a>
+        <a href="/privacy">Privacy notice</a>
         <a href="#top">Back to top ↑</a>
       </div>
     </footer>

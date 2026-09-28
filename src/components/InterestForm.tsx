@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getCountries, getCountryCallingCode, parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js'
+import { privacyNoticeVersion } from '../privacy'
 
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
 const countries = getCountries()
@@ -17,6 +18,7 @@ export default function InterestForm({ client }: Props) {
   const [error, setError] = useState('')
   const [country, setCountry] = useState<CountryCode>('IT')
   const [phoneError, setPhoneError] = useState('')
+  const [consentError, setConsentError] = useState('')
 
   if (!client) {
     return <div className="interest-note" role="status"><span className="interest-status-mark" aria-hidden="true">✳</span><p>The interest list is being set up. Please check back soon.</p></div>
@@ -27,6 +29,7 @@ export default function InterestForm({ client }: Props) {
     if (!client || submitting) return
     setError('')
     setPhoneError('')
+    setConsentError('')
     const input = event.currentTarget.elements.namedItem('email') as HTMLInputElement
     const email = input.value.trim().toLowerCase()
     if (!email || email.length > 320 || !input.checkValidity()) {
@@ -47,9 +50,21 @@ export default function InterestForm({ client }: Props) {
       phoneNumber = parsed.number
     }
 
+    const consentInput = event.currentTarget.elements.namedItem('privacy-consent') as HTMLInputElement
+    if (!consentInput.checked) {
+      setConsentError('Please give your consent before joining the interest list.')
+      consentInput.focus()
+      return
+    }
+
     setSubmitting(true)
     try {
-      const { error: requestError } = await client.rpc('join_interest_list', { p_email: email, p_phone_number: phoneNumber })
+      const { error: requestError } = await client.rpc('join_interest_list', {
+        p_email: email,
+        p_phone_number: phoneNumber,
+        p_privacy_notice_version: privacyNoticeVersion,
+        p_consent: true,
+      })
       if (requestError) {
         setError('Could not add your email. Please try again later.')
       } else {
@@ -95,6 +110,14 @@ export default function InterestForm({ client }: Props) {
         <p className="form-help" id="interest-phone-help">Choose a country code or paste a full number starting with +.</p>
         {phoneError && <p className="form-error" id="interest-phone-error" role="alert">{phoneError}</p>}
       </fieldset>
+      <div className="privacy-consent">
+        <div className="consent-option">
+          <input id="interest-consent" name="privacy-consent" type="checkbox" required aria-describedby={consentError ? 'interest-consent-help interest-consent-error' : 'interest-consent-help'} aria-invalid={consentError ? true : undefined} />
+          <label htmlFor="interest-consent">I consent to the club using my contact details to contact me about membership.</label>
+        </div>
+        <p id="interest-consent-help" className="form-help">Read our <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy notice</a>. You can withdraw your consent at any time.</p>
+        {consentError && <p id="interest-consent-error" className="form-error" role="alert">{consentError}</p>}
+      </div>
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button button-dark" type="submit" disabled={submitting}>{submitting ? 'Adding your email…' : 'Join the interest list'} <span aria-hidden="true">↗︎</span></button>
     </form>
