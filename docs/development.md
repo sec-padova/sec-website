@@ -43,7 +43,7 @@ The public directory contains only approved members who explicitly opt in. Do no
 
 ## Interest list
 
-The Join section accepts only an email address when `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are configured. Without them it shows a setup message. The browser calls `public.join_interest_list`, which normalizes the address and stores it in `private.club_interest`. Duplicate requests succeed without revealing whether an address was already submitted. Anonymous visitors cannot read, update, or delete the list. No Auth user, password, or member profile is created.
+The Join section requires only an email address when `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are configured. Visitors can optionally provide a phone number using the country calling-code selector (Italy by default) or paste an international number starting with `+`. [libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js) supplies country codes, parses national dialing prefixes, and checks possible number lengths. The browser sends the number in E.164 format; extensions are not supported. Without configuration the section shows a setup message. The browser calls `public.join_interest_list`, which normalizes the address and stores it with the nullable `phone_number` in `private.club_interest`. Duplicate requests succeed without revealing whether an address was already submitted and do not replace existing contact data. Anonymous visitors cannot read, update, or delete the list. No Auth user, password, or member profile is created.
 
 The public list is currently an expression of interest, not a verified newsletter subscription. It does not send mail. Before sending routine updates, add an email ownership confirmation and unsubscribe process. Publish a privacy notice with the club's contact, purpose, retention period, and removal route before collecting real addresses. Do not export or commit addresses to Git.
 
@@ -51,6 +51,6 @@ Local Supabase config disables public Auth sign-ups at the project level while l
 
 ## Hosted configuration
 
-Connect the organization-owned `sec-padova/sec-website` repository to Netlify. Connect the Supabase project to the same GitHub organization repository when ready to deploy reviewed migrations from `main`. Apply the member foundation and interest-list migrations before setting Netlify's browser-safe Supabase environment variables. Disable hosted public Auth sign-ups before publishing the list. The invitation and account flow is a later milestone.
+Connect the organization-owned `sec-padova/sec-website` repository to Netlify. Connect the Supabase project to the same GitHub organization repository when ready to deploy reviewed migrations from `main`. Apply all migrations, including `20260928010000_interest_phone.sql`, before deploying the updated form or setting Netlify's browser-safe Supabase environment variables. Disable hosted public Auth sign-ups before publishing the list. The invitation and account flow is a later milestone.
 
 Use `develop`, reviewed `feature/*` branches, and a release branch. Merge tested releases to `main` for production deployment.

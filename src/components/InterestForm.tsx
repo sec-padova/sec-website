@@ -1,5 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { getCountries, getCountryCallingCode, parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js'
+
+const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
+const countries = getCountries()
+  .map(code => ({ code, name: countryNames.of(code) ?? code, callingCode: getCountryCallingCode(code) }))
+  .sort((a, b) => a.name.localeCompare(b.name, 'en'))
 
 interface Props {
   client: SupabaseClient | null
@@ -9,15 +15,18 @@ export default function InterestForm({ client }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [country, setCountry] = useState<CountryCode>('IT')
+  const [phoneError, setPhoneError] = useState('')
 
   if (!client) {
-    return <p className="interest-note" role="status">The interest list is being set up. Please check back soon.</p>
+    return <div className="interest-note" role="status"><span className="interest-status-mark" aria-hidden="true">✳</span><p>The interest list is being set up. Please check back soon.</p></div>
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!client || submitting) return
     setError('')
+    setPhoneError('')
     const input = event.currentTarget.elements.namedItem('email') as HTMLInputElement
     const email = input.value.trim().toLowerCase()
     if (!email || email.length > 320 || !input.checkValidity()) {
@@ -25,9 +34,22 @@ export default function InterestForm({ client }: Props) {
       return
     }
 
+    const phoneInput = event.currentTarget.elements.namedItem('phone') as HTMLInputElement
+    const phone = phoneInput.value.trim()
+    let phoneNumber: string | null = null
+    if (phone) {
+      const parsed = parsePhoneNumberFromString(phone, { defaultCountry: country, extract: false })
+      if (!parsed || !parsed.isPossible() || parsed.ext || !/^\+[1-9]\d{1,14}$/.test(parsed.number)) {
+        setPhoneError('Enter a complete phone number with the correct country code, or leave it blank.')
+        phoneInput.focus()
+        return
+      }
+      phoneNumber = parsed.number
+    }
+
     setSubmitting(true)
     try {
-      const { error: requestError } = await client.rpc('join_interest_list', { p_email: email })
+      const { error: requestError } = await client.rpc('join_interest_list', { p_email: email, p_phone_number: phoneNumber })
       if (requestError) {
         setError('Could not add your email. Please try again later.')
       } else {
@@ -41,16 +63,38 @@ export default function InterestForm({ client }: Props) {
   }
 
   if (submitted) {
-    return <p className="interest-note" role="status">Thanks for your interest. We may email this address with an invitation to join the club later.</p>
+    return <div className="interest-note interest-success" role="status"><span className="interest-status-mark" aria-hidden="true">✓</span><h4>You’re on the list.</h4><p>Thanks for your interest. We may email this address with an invitation to join the club later.</p></div>
   }
 
   return (
     <form className="interest-form" onSubmit={handleSubmit} noValidate>
       <div className="form-field">
-        <label htmlFor="interest-email">Email</label>
-        <input id="interest-email" name="email" type="email" autoComplete="email" required maxLength={320} />
+        <div className="form-label-row"><label htmlFor="interest-email">Email</label><span className="field-required">Required</span></div>
+        <div className="form-input-wrap">
+          <svg className="form-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" /><path d="m4 7 8 6 8-6" /></svg>
+          <input id="interest-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required maxLength={320} />
+        </div>
       </div>
-      <p className="form-help">Leave your email to hear from us when club membership opens.</p>
+      <fieldset className="phone-fields">
+        <legend className="visually-hidden">Optional phone contact</legend>
+        <div className="phone-input-row">
+          <div className="form-field">
+            <label htmlFor="interest-phone-country">Country code</label>
+            <div className="form-select-wrap">
+              <select id="interest-phone-country" name="phone-country" value={country} onChange={event => setCountry(event.target.value as CountryCode)} autoComplete="tel-country-code">
+                {countries.map(({ code, name, callingCode }) => <option key={code} value={code}>{name} (+{callingCode})</option>)}
+              </select>
+              <svg className="form-select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
+            </div>
+          </div>
+          <div className="form-field">
+            <label htmlFor="interest-phone">Phone number <span>(optional)</span></label>
+            <input id="interest-phone" name="phone" type="tel" autoComplete="tel" placeholder="Your number" maxLength={64} aria-describedby={phoneError ? 'interest-phone-help interest-phone-error' : 'interest-phone-help'} aria-invalid={phoneError ? true : undefined} />
+          </div>
+        </div>
+        <p className="form-help" id="interest-phone-help">Choose a country code or paste a full number starting with +.</p>
+        {phoneError && <p className="form-error" id="interest-phone-error" role="alert">{phoneError}</p>}
+      </fieldset>
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button button-dark" type="submit" disabled={submitting}>{submitting ? 'Adding your email…' : 'Join the interest list'} <span aria-hidden="true">↗︎</span></button>
     </form>

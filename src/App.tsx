@@ -176,12 +176,17 @@ export default function App() {
       </section>
 
       <section className="last-cta section-pad" id="join" aria-labelledby="cta-title">
-        <div className="section-wrap">
-          <p className="eyebrow">The conversation starts here</p>
-          <h2 id="cta-title">The next idea<br />needs <em>you.</em></h2>
-          <p>Curious about joining a community of students and builders in Padova? Leave your email and we may invite you when membership opens.</p>
+        <div className="section-wrap join-layout">
+          <div className="join-intro">
+            <p className="eyebrow">The conversation starts here</p>
+            <h2 id="cta-title">The next idea<br />needs <em>you.</em></h2>
+            <p className="join-description">Curious about joining a community of students and builders in Padova? Leave your email to hear from us when membership opens.</p>
+            <div className="join-signoff"><span aria-hidden="true">✳</span> A little curiosity goes a long way.</div>
+          </div>
           <div className="interest-wrap">
+            <div className="interest-card-top"><p className="eyebrow">Let’s stay in touch</p><span className="interest-card-mark" aria-hidden="true">↗</span></div>
             <h3>Join the interest list</h3>
+            <p className="interest-card-description">Your email is all you need to get started.</p>
             <InterestForm client={supabase} />
           </div>
         </div>
