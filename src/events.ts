@@ -4,18 +4,29 @@ export type ClubEvent = {
   endsAt?: string
   location: string
   description: string
-  url: string
+  url?: string
+  poster?: {
+    src: string
+    alt: string
+    width: number
+    height: number
+  }
 }
 
 // Add confirmed events here. Do not include attendee data or addresses withheld by the event host.
 export const events: ClubEvent[] = [
   {
-    title: 'Student E-club: first meeting',
-    startsAt: '2026-10-20T18:30:00+02:00',
-    endsAt: '2026-10-20T20:00:00+02:00',
-    location: 'Address shared after registration',
-    description: 'The club’s first meeting. Register on Luma to see the address and event details.',
-    url: 'https://luma.com/30216joq',
+    title: 'Dead Startup Society',
+    startsAt: '2026-10-28T18:30:00+01:00',
+    location: 'Le Village by CA Triveneto',
+    description: 'Founders share their stories of failure. Unfiltered conversations, hard questions, and unexpected encounters.',
+    // Add the confirmed registration URL here when available.
+    poster: {
+      src: '/events/dead-startup-society.webp',
+      alt: 'Dead Startup Society poster: a hooded skeleton at a laptop, surrounded by startup plans and crumpled ideas.',
+      width: 900,
+      height: 1600,
+    },
   },
   {
     title: 'Student Entrepreneurs Club — Launch Night',
