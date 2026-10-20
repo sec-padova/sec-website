@@ -5,6 +5,7 @@ export type ClubEvent = {
   location: string
   description: string
   url?: string
+  lumaEventId?: string
   poster?: {
     src: string
     alt: string
@@ -20,7 +21,8 @@ export const events: ClubEvent[] = [
     startsAt: '2026-10-28T18:30:00+01:00',
     location: 'Le Village by CA Triveneto',
     description: 'Founders share their stories of failure. Unfiltered conversations, hard questions, and unexpected encounters.',
-    // Add the confirmed registration URL here when available.
+    url: 'https://luma.com/event/evt-dOCZWZIBbDHxJN2',
+    lumaEventId: 'evt-dOCZWZIBbDHxJN2',
     poster: {
       src: '/events/dead-startup-society.webp',
       alt: 'Dead Startup Society poster: a hooded skeleton at a laptop, surrounded by startup plans and crumpled ideas.',

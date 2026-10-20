@@ -23,7 +23,7 @@ describe('landing page', () => {
     expect(screen.getByRole('heading', { name: 'Dead Startup Society' })).toBeInTheDocument()
     expect(screen.getByText('18:30 · Padova time')).toBeInTheDocument()
     expect(screen.getByText('28 Oct 2026')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Registration coming soon' })).toBeDisabled()
+    expect(screen.getByRole('link', { name: /register on luma/i })).toHaveAttribute('href', 'https://luma.com/event/evt-dOCZWZIBbDHxJN2')
     expect(screen.getAllByRole('link').some((link) => link.getAttribute('href') === 'https://luma.com/30216joq')).toBe(false)
     expect(screen.getByRole('heading', { name: 'Student Entrepreneurs Club — Launch Night' })).toBeInTheDocument()
     expect(screen.getAllByRole('link').some((link) => link.getAttribute('href') === 'https://luma.com/pf6b3exb')).toBe(true)

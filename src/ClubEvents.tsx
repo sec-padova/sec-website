@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import LumaCheckoutLink from './components/LumaCheckoutLink'
 import type { ClubEvent } from './events'
 
 type Props = {
@@ -62,6 +63,10 @@ function EventAction({ event, past, featured }: { event: ClubEvent, past?: boole
   }
 
   const isLuma = new URL(event.url).hostname === 'luma.com'
+
+  if (!past && isLuma && event.lumaEventId) {
+    return <LumaCheckoutLink eventId={event.lumaEventId} href={event.url} />
+  }
 
   return (
     <a className="event-link" href={event.url} target="_blank" rel="noopener noreferrer">

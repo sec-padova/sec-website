@@ -79,19 +79,21 @@ describe('club events', () => {
     expect(screen.queryByRole('heading', { name: 'Past event 1' })).not.toBeInTheDocument()
   })
 
-  it('features the confirmed poster, local date, venue, and registration placeholder', () => {
+  it('features the confirmed poster, local date, venue, and Luma registration', () => {
     render(<ClubEvents events={events} now={new Date('2026-10-20T12:00:00Z')} />)
     const feature = screen.getByRole('article', { name: 'Dead Startup Society' })
     expect(within(feature).getByText('28 Oct 2026')).toHaveAttribute('datetime', '2026-10-28T18:30:00+01:00')
     expect(within(feature).getByText('18:30 · Padova time')).toBeInTheDocument()
     expect(within(feature).getByText('Le Village by CA Triveneto')).toBeInTheDocument()
     expect(within(feature).getByRole('img', { name: /hooded skeleton/i })).toHaveAttribute('src', '/events/dead-startup-society.webp')
-    expect(within(feature).getByRole('button', { name: 'Registration coming soon' })).toBeDisabled()
-    expect(within(feature).queryByRole('link')).not.toBeInTheDocument()
+    const registration = within(feature).getByRole('link', { name: /register on luma/i })
+    expect(registration).toHaveAttribute('href', 'https://luma.com/event/evt-dOCZWZIBbDHxJN2')
+    expect(registration).toHaveAttribute('data-luma-event-id', 'evt-dOCZWZIBbDHxJN2')
+    expect(registration).toHaveAttribute('data-luma-action', 'checkout')
   })
 
   it('enables registration when the URL is provided', () => {
-    render(<ClubEvents events={[{ ...events[0], url: 'https://luma.com/confirmed-event' }]} now={now} />)
+    render(<ClubEvents events={[{ ...events[0], url: 'https://luma.com/confirmed-event', lumaEventId: undefined }]} now={now} />)
     const link = screen.getByRole('link', { name: /register on luma/i })
     expect(link).toHaveAttribute('href', 'https://luma.com/confirmed-event')
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
@@ -99,13 +101,22 @@ describe('club events', () => {
   })
 
   it('archives an event without an end after its start, without requiring a link', () => {
-    const { rerender } = render(<ClubEvents events={[events[0]]} now={new Date('2026-10-28T17:30:00Z')} />)
+    const announcement = { ...events[0], url: undefined, lumaEventId: undefined }
+    const { rerender } = render(<ClubEvents events={[announcement]} now={new Date('2026-10-28T17:30:00Z')} />)
+    expect(screen.getByRole('button', { name: 'Registration coming soon' })).toBeDisabled()
     expect(screen.getByRole('article', { name: 'Dead Startup Society' })).toBeInTheDocument()
-    rerender(<ClubEvents events={[events[0]]} now={new Date('2026-10-28T17:30:01Z')} />)
+    rerender(<ClubEvents events={[announcement]} now={new Date('2026-10-28T17:30:01Z')} />)
     expect(screen.queryByRole('article')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dead Startup Society' })).toBeInTheDocument()
     expect(screen.getByText('Our next gathering is taking shape.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Registration coming soon' })).not.toBeInTheDocument()
+  })
+
+  it('uses an ordinary link for a past Luma event', () => {
+    render(<ClubEvents events={[events[0]]} now={new Date('2026-10-29T12:00:00Z')} />)
+    const link = screen.getByRole('link', { name: /view past event/i })
+    expect(link).toHaveAttribute('href', events[0].url)
+    expect(link).not.toHaveAttribute('data-luma-action')
   })
 
   it('keeps an ongoing event featured until its end', () => {
