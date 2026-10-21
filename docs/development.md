@@ -23,6 +23,8 @@ The earliest upcoming event is featured first, with an optional local `poster` (
 
 For embedded Luma registration, set both the HTTPS Luma `url` and its `lumaEventId` from the event's embed snippet. `LumaCheckoutLink` loads the official `https://embed.lu.ma/checkout-button.js` once when an upcoming registration button mounts, then reinitializes it for newly mounted buttons. It uses Luma's data attributes with the site's own button class, so provider button styles do not override the design. The normal link remains a fallback before the script loads or if it fails; past events use ordinary links. Registration is handled by Luma, separately from the membership interest-list form. The script is not loaded on the privacy page. See [Luma's embed documentation](https://help.luma.com/p/embed-luma-on-your-website).
 
+Homepage motion uses native CSS smooth scrolling, with 24px anchor spacing, and `useScrollReveal` attached to the landing page's main element. Mark individual content groups with `data-reveal` and optional `data-reveal-delay="80"` or `"160"`; avoid nested reveal targets. Content stays visible without IntersectionObserver, reveals once, and becomes immediately visible on keyboard focus. Reduced-motion preferences disable scrolling/entrance movement and stop pending reveals when enabled during a session. Fine-pointer hover adds short button/link feedback and a single poster wobble; the poster's stationary outer wrapper owns hover while the inner frame rotates. No animation library is required.
+
 ## Local database
 
 Start Docker Desktop, then run:

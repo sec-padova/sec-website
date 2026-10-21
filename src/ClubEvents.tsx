@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import LumaCheckoutLink from './components/LumaCheckoutLink'
 import type { ClubEvent } from './events'
 
@@ -77,7 +76,7 @@ function EventAction({ event, past, featured }: { event: ClubEvent, past?: boole
 
 function EventCard({ event, past }: { event: ClubEvent, past?: boolean }) {
   return (
-    <li className={`event-card${past ? ' event-card-past' : ''}`} data-event-reveal>
+    <li className={`event-card${past ? ' event-card-past' : ''}`} data-reveal>
       <EventDate event={event} past={past} />
       <div className="event-details">
         <p className="event-location">{event.location}</p>
@@ -91,13 +90,15 @@ function EventCard({ event, past }: { event: ClubEvent, past?: boolean }) {
 
 function FeaturedEvent({ event }: { event: ClubEvent }) {
   return (
-    <article className={`event-feature${event.poster ? '' : ' event-feature-text'}`} aria-labelledby="featured-event-title" data-event-reveal>
+    <article className={`event-feature${event.poster ? '' : ' event-feature-text'}`} aria-labelledby="featured-event-title">
       {event.poster && (
-        <div className="event-poster">
-          <img src={event.poster.src} alt={event.poster.alt} width={event.poster.width} height={event.poster.height} loading="lazy" decoding="async" />
+        <div className="event-poster" data-reveal>
+          <div className="event-poster-frame">
+            <img src={event.poster.src} alt={event.poster.alt} width={event.poster.width} height={event.poster.height} loading="lazy" decoding="async" />
+          </div>
         </div>
       )}
-      <div className="event-feature-copy">
+      <div className="event-feature-copy" data-reveal data-reveal-delay="80">
         <p className="event-feature-label"><span aria-hidden="true">✳︎</span> Next up / In Padova</p>
         <h3 id="featured-event-title">{event.title}</h3>
         <p className="event-feature-description">{event.description}</p>
@@ -115,7 +116,6 @@ function FeaturedEvent({ event }: { event: ClubEvent }) {
 }
 
 export default function ClubEvents({ events, now = new Date() }: Props) {
-  const sectionRef = useRef<HTMLElement>(null)
   const published = events.filter(isPublishedEvent)
   const upcoming = published
     .filter((event) => endTime(event) >= now.getTime())
@@ -126,35 +126,10 @@ export default function ClubEvents({ events, now = new Date() }: Props) {
     .slice(0, 3)
   const [featured, ...remaining] = upcoming
 
-  useEffect(() => {
-    if (!sectionRef.current || !('IntersectionObserver' in window)
-      || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-
-    const elements = sectionRef.current.querySelectorAll<HTMLElement>('[data-event-reveal]')
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return
-        entry.target.classList.remove('event-reveal-pending')
-        entry.target.classList.add('event-reveal-visible')
-        observer.unobserve(entry.target)
-      })
-    }, { threshold: 0.08 })
-
-    elements.forEach((element) => {
-      element.classList.add('event-reveal-pending')
-      observer.observe(element)
-    })
-
-    return () => {
-      observer.disconnect()
-      elements.forEach((element) => element.classList.remove('event-reveal-pending', 'event-reveal-visible'))
-    }
-  }, [events, featured?.startsAt])
-
   return (
-    <section ref={sectionRef} className="events section-pad" id="events" aria-labelledby="events-title">
+    <section className="events section-pad" id="events" aria-labelledby="events-title">
       <div className="section-wrap">
-        <div className="section-heading-row" data-event-reveal>
+        <div className="section-heading-row" data-reveal>
           <div>
             <p className="eyebrow">03 / On the calendar</p>
             <h2 id="events-title">Meet us at{' '}<br /><em>the next event.</em></h2>
@@ -163,7 +138,7 @@ export default function ClubEvents({ events, now = new Date() }: Props) {
         </div>
 
         {featured ? <FeaturedEvent event={featured} /> : (
-          <div className="events-empty" data-event-reveal>
+          <div className="events-empty" data-reveal>
             <span className="events-empty-mark" aria-hidden="true">✳︎</span>
             <div>
               <p className="event-location">More to come</p>

@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import ClubEvents from './ClubEvents'
 import { events, type ClubEvent } from './events'
 
@@ -14,8 +14,6 @@ const later: ClubEvent = {
 }
 
 describe('club events', () => {
-  afterEach(() => vi.unstubAllGlobals())
-
   it('shows an honest empty state until an event is confirmed', () => {
     render(<ClubEvents events={[]} now={now} />)
 
@@ -127,34 +125,4 @@ describe('club events', () => {
     expect(within(container).getByRole('article', { name: later.title })).toBeInTheDocument()
   })
 
-  it('leaves content visible when reduced motion is requested', () => {
-    const observe = vi.fn()
-    vi.stubGlobal('IntersectionObserver', class { observe = observe })
-    vi.stubGlobal('matchMedia', () => ({ matches: true }))
-    const { container } = render(<ClubEvents events={events} now={now} />)
-    expect(observe).not.toHaveBeenCalled()
-    expect(container.querySelector('.event-reveal-pending')).toBeNull()
-  })
-
-  it('reveals observed content once and disconnects on unmount', () => {
-    let callback: IntersectionObserverCallback = () => {}
-    const observe = vi.fn()
-    const unobserve = vi.fn()
-    const disconnect = vi.fn()
-    vi.stubGlobal('IntersectionObserver', class {
-      constructor(onIntersect: IntersectionObserverCallback) { callback = onIntersect }
-      observe = observe
-      unobserve = unobserve
-      disconnect = disconnect
-    })
-    const { unmount } = render(<ClubEvents events={events} now={now} />)
-    const feature = screen.getByRole('article', { name: 'Dead Startup Society' })
-    expect(feature).toHaveClass('event-reveal-pending')
-    callback([{ isIntersecting: true, target: feature } as unknown as IntersectionObserverEntry], {} as IntersectionObserver)
-    expect(feature).not.toHaveClass('event-reveal-pending')
-    expect(feature).toHaveClass('event-reveal-visible')
-    expect(unobserve).toHaveBeenCalledWith(feature)
-    unmount()
-    expect(disconnect).toHaveBeenCalled()
-  })
 })
