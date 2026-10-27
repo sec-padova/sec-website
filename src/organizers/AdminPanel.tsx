@@ -48,6 +48,7 @@ function GroupSettings({ group, mutate }: { group?: WorkingGroup, mutate: Mutate
 export default function AdminPanel({ client, data, currentUserId, mutate, onMessage }: { client: SupabaseClient, data: WorkspaceData, currentUserId: string, mutate: Mutate, onMessage: (message: string) => void }) {
   const [access, setAccess] = useState<AdminAccess | null>(null)
   const [email, setEmail] = useState('')
+  const [invitation, setInvitation] = useState<{ email: string, url: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const reload = useCallback(async () => {
@@ -68,15 +69,17 @@ export default function AdminPanel({ client, data, currentUserId, mutate, onMess
   async function sendInvitation(address: string) {
     setBusy(true)
     setError('')
+    setInvitation(null)
     try {
       const { data: result, error: requestError } = await client.functions.invoke('organizer-invite', { body: { email: address } })
-      if (requestError) throw new Error('Could not send the email. The invitation may be saved; refresh and retry sending it.')
+      if (requestError || !result?.invitation_url) throw new Error('Could not create the link. The invitation may be saved; refresh and retry.')
+      setInvitation({ email: result.email, url: result.invitation_url })
       onMessage(result.message)
       setEmail('')
       await reload()
     } catch (error) {
       await reload()
-      setError(error instanceof Error ? error.message : 'Could not send invitation.')
+      setError(error instanceof Error ? error.message : 'Could not create invitation.')
     }
     finally { setBusy(false) }
   }
@@ -86,6 +89,7 @@ export default function AdminPanel({ client, data, currentUserId, mutate, onMess
     setError('')
     try {
       await mutate('admin_revoke_organizer', { p_organizer_id: id, p_email: address })
+      if (invitation?.email === address) setInvitation(null)
       await reload()
       onMessage('Workspace access revoked.')
     }
@@ -102,12 +106,22 @@ export default function AdminPanel({ client, data, currentUserId, mutate, onMess
   }
   return <section className="workspace-admin" aria-labelledby="admin-title"><p className="eyebrow">Restricted to admins</p><h2 id="admin-title">Administration</h2>
     <p>Admin permission is private and independent of working-group membership. Admin appointments are made by the project owner.</p>
-    <form className="workspace-form admin-invite-form" onSubmit={invite}><label htmlFor="invite-email">Invite an organizer by email</label><div className="workspace-actions"><input id="invite-email" type="email" value={email} onChange={event => setEmail(event.target.value)} maxLength={320} required /><button className="workspace-button" disabled={busy}>{busy ? 'Please wait…' : 'Send invitation'}</button></div></form>
+    <form className="workspace-form admin-invite-form" onSubmit={invite}><label htmlFor="invite-email">Invite an organizer by email</label><div className="workspace-actions"><input id="invite-email" type="email" value={email} onChange={event => setEmail(event.target.value)} maxLength={320} required /><button className="workspace-button" disabled={busy}>{busy ? 'Please wait…' : 'Create invitation link'}</button></div></form>
+    <p className="workspace-muted">The club sends invitations manually. Create a private link here, then email it directly to that person. For an existing account, this creates a password setup link.</p>
+    {invitation && <div className="workspace-notice workspace-form">
+      <label htmlFor="private-invitation-link">Private link for {invitation.email}</label>
+      <input id="private-invitation-link" readOnly value={invitation.url} onFocus={event => event.target.select()} />
+      <p>This link grants access to this person’s account. Send it only to them. It expires after one hour; create a new link if needed.</p>
+      <div className="workspace-actions"><button className="workspace-button" type="button" onClick={async () => {
+        try { await navigator.clipboard.writeText(invitation.url); onMessage('Private link copied.') }
+        catch { setError('Could not copy automatically. Select and copy the private link above.') }
+      }}>Copy private link</button><button className="workspace-text-button" type="button" onClick={() => setInvitation(null)}>Hide link</button></div>
+    </div>}
     {error && <p role="alert" className="form-error">{error}</p>}
     {!access && <button className="workspace-text-button" onClick={() => void reload()}>Reload administration</button>}
     {access && <>
       <h3>Organizer accounts</h3><ul className="admin-account-list">{access.accounts.map(account => <li key={account.id}><span>{data.people.find(person => person.id === account.id) ? fullName(data.people.find(person => person.id === account.id)!) : 'Onboarding pending'}<small>{account.email}{access.admins.includes(account.id) ? ' · Admin' : ''}</small></span><button className="workspace-text-button" disabled={busy || (account.id === currentUserId && access.admins.length === 1)} onClick={() => void revoke(account.id, account.email)}>Revoke access</button></li>)}</ul>
-      <details><summary>Invitation records ({access.invitations.length})</summary><ul className="admin-account-list">{access.invitations.map(invitation => <li key={invitation.email}><span>{invitation.email}<small>{invitation.active ? 'Access authorized' : 'Revoked'} · {workspaceDate(invitation.invited_at)}</small></span>{invitation.active && <div className="workspace-actions"><button className="workspace-text-button" disabled={busy} onClick={() => void sendInvitation(invitation.email)}>Send email again</button>{!invitation.user_id && <button className="workspace-text-button" disabled={busy} onClick={() => void revoke(null, invitation.email)}>Revoke invitation</button>}</div>}</li>)}</ul></details>
+      <details><summary>Invitation records ({access.invitations.length})</summary><ul className="admin-account-list">{access.invitations.map(invitation => <li key={invitation.email}><span>{invitation.email}<small>{invitation.active ? 'Access authorized' : 'Revoked'} · {workspaceDate(invitation.invited_at)}</small></span>{invitation.active && <div className="workspace-actions"><button className="workspace-text-button" disabled={busy} onClick={() => void sendInvitation(invitation.email)}>Create new private link</button><button className="workspace-text-button" disabled={busy} onClick={() => void revoke(invitation.user_id, invitation.email)}>Revoke invitation</button></div>}</li>)}</ul></details>
       <details><summary>Manage group memberships</summary>{data.groups.filter(group => !group.archived_at).map(group => <fieldset className="workspace-group-choices" key={group.id}><legend>{group.name}</legend>{data.people.map(person => <label key={person.id}><input type="checkbox" disabled={busy} checked={group.members.some(member => member.organizer_id === person.id)} onChange={event => void membership(group.id, person.id, event.target.checked)} />{fullName(person)}</label>)}</fieldset>)}</details>
     </>}
     <h3>Working groups</h3><GroupSettings mutate={mutate} />{data.groups.map(group => <GroupSettings key={group.id} group={group} mutate={mutate} />)}

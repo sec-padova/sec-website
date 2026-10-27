@@ -8,8 +8,7 @@ function fixture(overrides: Partial<InvitationDependencies> = {}) {
     authorize: vi.fn().mockResolvedValue(true),
     prepare: vi.fn().mockResolvedValue({ data: { email: 'ada@example.com', user_id: null }, error: null }),
     isConfirmed: vi.fn().mockResolvedValue(false),
-    invite: vi.fn().mockResolvedValue({ error: null }),
-    recover: vi.fn().mockResolvedValue({ error: null }),
+    generate: vi.fn().mockResolvedValue({ data: { hashed_token: 'private-token' }, error: null }),
     ...overrides,
   }
   const handler = createInvitationHandler(dependencies)
@@ -25,7 +24,7 @@ describe('organizer invitation endpoint', () => {
     expect((await request({}, '')).status).toBe(401)
     expect((await request()).status).toBe(403)
     expect(dependencies.prepare).not.toHaveBeenCalled()
-    expect(dependencies.invite).not.toHaveBeenCalled()
+    expect(dependencies.generate).not.toHaveBeenCalled()
   })
 
   it('rejects foreign origins and malformed input', async () => {
@@ -36,18 +35,20 @@ describe('organizer invitation endpoint', () => {
     expect(dependencies.prepare).not.toHaveBeenCalled()
   })
 
-  it('prepares a normalized invitation before sending a fixed acceptance URL', async () => {
+  it('prepares a normalized invitation and returns a private link on the fixed site without sending email', async () => {
     const { request, dependencies } = fixture()
-    expect((await request({ email: ' Ada@Example.com ', user_id: 'forged', is_admin: true, redirectTo: 'https://attacker.example.org' })).status).toBe(200)
+    const response = await request({ email: ' Ada@Example.com ', user_id: 'forged', is_admin: true, redirectTo: 'https://attacker.example.org' })
+    expect(response.status).toBe(200)
+    expect(response.headers.get('cache-control')).toBe('no-store')
+    expect(await response.json()).toMatchObject({ email: 'ada@example.com', invitation_url: 'https://sec.example.org/organizers/register?token_hash=private-token&type=invite' })
     expect(dependencies.prepare).toHaveBeenCalledWith('verified-token', 'ada@example.com')
-    expect(dependencies.invite).toHaveBeenCalledWith('ada@example.com', 'https://sec.example.org/organizers/register')
-    expect(dependencies.recover).not.toHaveBeenCalled()
+    expect(dependencies.generate).toHaveBeenCalledWith('ada@example.com', 'invite', 'https://sec.example.org/organizers/register')
   })
 
-  it('does not send mail if preparation is denied after authorization', async () => {
+  it('does not generate a link if preparation is denied after authorization', async () => {
     const { request, dependencies } = fixture({ prepare: vi.fn().mockResolvedValue({ data: null, error: { code: '42501' } }) })
     expect((await request()).status).toBe(403)
-    expect(dependencies.invite).not.toHaveBeenCalled()
+    expect(dependencies.generate).not.toHaveBeenCalled()
   })
 
   it('allows an explicitly configured local origin while keeping invitation links on the shared site', async () => {
@@ -58,7 +59,7 @@ describe('organizer invitation endpoint', () => {
     }))
     expect(response.status).toBe(200)
     expect(response.headers.get('access-control-allow-origin')).toBe('http://localhost:5173')
-    expect(dependencies.invite).toHaveBeenCalledWith('ada@example.com', 'https://sec.example.org/organizers/register')
+    expect(dependencies.generate).toHaveBeenCalledWith('ada@example.com', 'invite', 'https://sec.example.org/organizers/register')
   })
 
   it('uses password setup for an existing confirmed account', async () => {
@@ -66,25 +67,31 @@ describe('organizer invitation endpoint', () => {
       prepare: vi.fn().mockResolvedValue({ data: { email: 'ada@example.com', user_id: 'known-user' }, error: null }),
       isConfirmed: vi.fn().mockResolvedValue(true),
     })
-    expect((await request()).status).toBe(200)
+    const response = await request()
+    expect(response.status).toBe(200)
     expect(dependencies.isConfirmed).toHaveBeenCalledWith('known-user')
-    expect(dependencies.recover).toHaveBeenCalledWith('ada@example.com', 'https://sec.example.org/organizers/recovery')
-    expect(dependencies.invite).not.toHaveBeenCalled()
+    expect(dependencies.generate).toHaveBeenCalledWith('ada@example.com', 'recovery', 'https://sec.example.org/organizers/recovery')
+    expect(await response.json()).toMatchObject({ invitation_url: 'https://sec.example.org/organizers/recovery?token_hash=private-token&type=recovery' })
   })
 
-  it('resends an invitation for an unconfirmed existing account', async () => {
+  it('creates another invitation link for an unconfirmed existing account', async () => {
     const { request, dependencies } = fixture({ prepare: vi.fn().mockResolvedValue({ data: { email: 'ada@example.com', user_id: 'pending-user' }, error: null }) })
     expect((await request()).status).toBe(200)
-    expect(dependencies.invite).toHaveBeenCalledOnce()
+    expect(dependencies.generate).toHaveBeenCalledWith('ada@example.com', 'invite', 'https://sec.example.org/organizers/register')
   })
 
-  it('reports delivery failure without exposing provider errors and allows retry', async () => {
+  it('reports generation failure without exposing provider errors or tokens and allows retry', async () => {
     const { request, dependencies } = fixture()
-    vi.mocked(dependencies.invite).mockResolvedValueOnce({ error: new Error('secret provider details') })
+    vi.mocked(dependencies.generate).mockResolvedValueOnce({ data: null, error: new Error('secret provider details') })
     const failed = await request()
     expect(failed.status).toBe(502)
     expect(await failed.text()).not.toContain('secret provider details')
     expect((await request()).status).toBe(200)
     expect(dependencies.prepare).toHaveBeenCalledTimes(2)
+  })
+
+  it('rejects a response without a token', async () => {
+    const { request } = fixture({ generate: vi.fn().mockResolvedValue({ data: null, error: null }) })
+    expect((await request()).status).toBe(502)
   })
 })

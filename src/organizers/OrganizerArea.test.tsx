@@ -47,7 +47,7 @@ function fixture(initialContext: OrganizerContext = { authorized: true, is_admin
     verifyOtp: vi.fn().mockResolvedValue({ data: { session }, error: null }),
     signOut: vi.fn().mockResolvedValue({ error: null }),
   }
-  const invoke = vi.fn().mockResolvedValue({ data: { message: 'Invitation email sent.' }, error: null })
+  const invoke = vi.fn().mockResolvedValue({ data: { message: 'Private link ready. Send it directly to the invited person.', email: 'ada@example.com', invitation_url: 'https://sec.example.org/organizers/register?token_hash=private-test-token&type=invite' }, error: null })
   return { client: { rpc, auth, functions: { invoke } } as unknown as SupabaseClient, rpc, auth, invoke, workspace }
 }
 
@@ -83,7 +83,7 @@ describe('organizer account access', () => {
     expect(screen.getByRole('status')).toHaveTextContent('The workspace is being set up')
   })
 
-  it('requires login before retrieving workspace data and supports password recovery', async () => {
+  it('requires login before retrieving workspace data and directs password recovery to an admin without sending email', async () => {
     window.history.replaceState({}, '', '/organizers')
     const { client, rpc, auth } = fixture(undefined, null)
     render(<OrganizerArea client={client} />)
@@ -95,10 +95,10 @@ describe('organizer account access', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
     await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalledWith({ email: 'marco@example.com', password: 'correct-password' }))
     fireEvent.click(screen.getByRole('button', { name: 'Forgot your password?' }))
-    fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), { target: { value: 'marco@example.com' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Send reset link' }))
-    expect(await screen.findByRole('status')).toHaveTextContent('If this email has an account')
-    expect(auth.resetPasswordForEmail).toHaveBeenCalledWith('marco@example.com', { redirectTo: `${window.location.origin}/organizers/recovery` })
+    expect(screen.getByText(/Ask a club admin for a private password setup link/)).toBeInTheDocument()
+    expect(auth.resetPasswordForEmail).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Back to sign in' }))
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('denies authenticated non-organizers without loading group data', async () => {
@@ -328,9 +328,13 @@ describe('working group overview', () => {
     expect(await screen.findByText('marco@example.com · Admin')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Revoke access' })).toBeDisabled()
     fireEvent.change(screen.getByRole('textbox', { name: 'Invite an organizer by email' }), { target: { value: 'ada@example.com' } })
-    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Send invitation' })))
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create invitation link' })))
     expect(invoke).toHaveBeenCalledWith('organizer-invite', { body: { email: 'ada@example.com' } })
-    expect(screen.getByRole('status')).toHaveTextContent('Invitation email sent.')
+    expect(screen.getByRole('status')).toHaveTextContent('Private link ready.')
+    expect(screen.getByRole('textbox', { name: 'Private link for ada@example.com' })).toHaveValue('https://sec.example.org/organizers/register?token_hash=private-test-token&type=invite')
+    expect(screen.getByRole('button', { name: 'Copy private link' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Hide link' }))
+    expect(screen.queryByRole('textbox', { name: 'Private link for ada@example.com' })).not.toBeInTheDocument()
   })
 
   it('keeps large rosters compact and opens complete member work separately', async () => {

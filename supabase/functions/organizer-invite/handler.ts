@@ -6,8 +6,7 @@ export interface InvitationDependencies {
   authorize: (token: string) => Promise<boolean>
   prepare: (token: string, email: string) => Promise<Result<{ email: string, user_id: string | null }>>
   isConfirmed: (id: string) => Promise<boolean>
-  invite: (email: string, redirectTo: string) => Promise<{ error: unknown }>
-  recover: (email: string, redirectTo: string) => Promise<{ error: unknown }>
+  generate: (email: string, type: 'invite' | 'recovery', redirectTo: string) => Promise<Result<{ hashed_token: string }>>
 }
 
 export function createInvitationHandler(dependencies: InvitationDependencies) {
@@ -44,14 +43,15 @@ export function createInvitationHandler(dependencies: InvitationDependencies) {
       if (prepared.error || !prepared.data) return respond(403, { error: 'Invitation could not be prepared' })
       // The database resolves existing accounts by email; the request cannot pick a user ID.
       const existing = prepared.data.user_id && await dependencies.isConfirmed(prepared.data.user_id)
-      const redirectTo = new URL(existing ? '/organizers/recovery' : '/organizers/register', site).href
-      const result = existing
-        ? await dependencies.recover(prepared.data.email, redirectTo)
-        : await dependencies.invite(prepared.data.email, redirectTo)
-      if (result.error) return respond(502, { error: 'Email could not be sent. The invitation is saved; retry sending it.' })
-      return respond(200, { message: existing ? 'Account access granted and a password setup email sent.' : 'Invitation email sent.' })
+      const type = existing ? 'recovery' : 'invite'
+      const link = new URL(existing ? '/organizers/recovery' : '/organizers/register', site)
+      const result = await dependencies.generate(prepared.data.email, type, link.href)
+      if (result.error || !result.data?.hashed_token) return respond(502, { error: 'Could not create the link. The invitation is saved; please retry.' })
+      link.searchParams.set('token_hash', result.data.hashed_token)
+      link.searchParams.set('type', type)
+      return respond(200, { message: 'Private link ready. Send it directly to the invited person.', email: prepared.data.email, invitation_url: link.href })
     } catch {
-      return respond(502, { error: 'Email could not be sent. Please retry.' })
+      return respond(502, { error: 'Could not create the link. Please retry.' })
     }
   }
 }

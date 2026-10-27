@@ -28,10 +28,8 @@ Deno.serve(createInvitationHandler({
     if (error) throw error
     return Boolean(data.user?.email_confirmed_at)
   },
-  async invite(email, redirectTo) {
-    return await admin.auth.admin.inviteUserByEmail(email, { redirectTo })
-  },
-  async recover(email, redirectTo) {
-    return await admin.auth.resetPasswordForEmail(email, { redirectTo })
+  async generate(email, type, redirectTo) {
+    const { data, error } = await admin.auth.admin.generateLink({ type, email, options: { redirectTo } })
+    return { data: data.properties, error }
   },
 }))

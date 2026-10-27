@@ -68,7 +68,7 @@ insert into private.workspace_invitations (email)
 values ('owner-approved-email@example.com');
 ```
 
-Use `auth.admin.inviteUserByEmail` from a trusted server with `redirectTo` set to `https://sec-padova.netlify.app/organizers/register`. The account-creation trigger consumes the trusted authorization and adds the account to `public.organizers`. The invitee accepts the email and completes name/password registration. Never run this operation with browser credentials or commit real email addresses.
+Use `auth.admin.generateLink({ type: 'invite', email, options: { redirectTo: 'https://sec-padova.netlify.app/organizers/register' } })` from a trusted server. Construct the private registration URL with the returned `hashed_token` as `token_hash` and `type=invite`, then send it directly to that person yourself. No email is sent by the application. The account-creation trigger consumes the trusted authorization and adds the account to `public.organizers`. The invitee opens the link and completes name/password registration. Never run this operation with browser credentials or commit real email addresses or invitation tokens.
 
 For an **existing** Auth account, add its ID to `public.organizers` through trusted SQL; the user can sign in and complete organizer onboarding. To appoint a chosen organizer as an admin after onboarding:
 
@@ -79,19 +79,19 @@ values ('<existing public.organizers user ID>');
 
 Remove an admin appointment through trusted SQL by deleting that ID from `private.workspace_admins`. Verify another onboarded admin remains. Role metadata is never accepted as authorization.
 
-### Invitations and local email testing
+### Manually delivered invitations
 
-The `organizer-invite` Edge Function verifies the bearer JWT using Supabase Auth and checks the caller’s live admin grant before preparing or sending an invitation. Its gateway JWT check is disabled because the handler performs validation itself. Set `ORGANIZER_SITE_URL` to the exact frontend origin, without a path. `ORGANIZER_ALLOWED_ORIGINS` optionally lists additional explicit frontend origins separated by commas, for example loopback URLs while sharing a local preview. It never accepts a wildcard; invitation links still point to `ORGANIZER_SITE_URL`. Function credentials use Supabase’s server-side `SUPABASE_SERVICE_ROLE_KEY`, or `SUPABASE_SECRET_KEY` when provided. They never belong in a `VITE_` variable.
+The `organizer-invite` Edge Function verifies the bearer JWT using Supabase Auth and checks the caller’s live admin grant before creating a private link. Its gateway JWT check is disabled because the handler performs validation itself. Set `ORGANIZER_SITE_URL` to the exact frontend origin, without a path. `ORGANIZER_ALLOWED_ORIGINS` optionally lists additional explicit frontend origins separated by commas, for example loopback URLs while sharing a local preview. It never accepts a wildcard; invitation links still point to `ORGANIZER_SITE_URL`. Function credentials use Supabase’s server-side `SUPABASE_SERVICE_ROLE_KEY`, or `SUPABASE_SECRET_KEY` when provided. They never belong in a `VITE_` variable.
 
-Invitation authorization is persisted before delivery. A failed send leaves a record that an admin can retry or revoke. Duplicate requests do not create duplicate grants. Unconfirmed accounts receive another invitation; confirmed accounts receive a password setup/recovery email and can also sign in normally. Re-authorizing a revoked account requires an explicit new admin invitation. The invitation-record label **Access authorized** refers to access approval, not proof of email delivery or onboarding completion.
+Invitation authorization is persisted before link generation. A failed attempt leaves a record that an admin can retry or revoke. Duplicate requests do not create duplicate grants. In **Administration**, enter an email and select **Create invitation link**, then copy the private link and email it yourself. Unconfirmed accounts receive an invitation link; confirmed accounts receive a password setup/recovery link and can also sign in normally. Links expire after one hour, appear only in the current admin view, and must be sent only to the named recipient. **Create new private link** replaces an expired link. Re-authorizing a revoked account requires an explicit new admin invitation. The invitation-record label **Access authorized** refers to access approval, not proof of email delivery or onboarding completion. Password recovery directs people to ask an admin for a new private link; the application never sends email and needs no SMTP configuration.
 
-Keep public Auth signup disabled. Configure the Invite and Reset Password templates using `supabase/templates/organizer-invite.html` and `supabase/templates/organizer-recovery.html`. Their links go to the application with `token_hash` and the matching `invite`/`recovery` type. Tokens are verified only after **Continue** is clicked and then removed from the URL. Avoid email-provider link tracking. Configure the production Site URL and allowlist these exact redirects:
+Keep public Auth signup disabled. Private links go to the application with `token_hash` and the matching `invite`/`recovery` type. Tokens are verified only after **Continue** is clicked and then removed from the URL. Avoid link tracking when sending these links. The local email templates are optional references; production does not use them. Configure the production Site URL and allowlist these exact redirects:
 
 - `https://sec-padova.netlify.app/organizers/accept`
 - `https://sec-padova.netlify.app/organizers/register`
 - `https://sec-padova.netlify.app/organizers/recovery`
 
-Configure production SMTP before sending real invitations. Local config uses the bundled templates and Supabase’s email test service; no real emails are sent locally. Use the same host for Vite, the function’s `ORGANIZER_SITE_URL`, and the email redirect. For example:
+Do not configure SMTP for this workflow. Use the same host for Vite, the function’s `ORGANIZER_SITE_URL`, and the invitation redirect. For local testing:
 
 ```sh
 npm run db:start
@@ -101,7 +101,7 @@ npx supabase functions serve organizer-invite --env-file supabase/.env.local
 npm run dev -- --host 127.0.0.1
 ```
 
-Inspect local messages at `http://127.0.0.1:54324`. Acceptance and recovery are separate screens. Password reset responses do not disclose whether an email has an account. Use disposable test identities only, and remove their Auth accounts and invitation records after manual tests. Database tests use rollback transactions.
+Acceptance and recovery are separate screens. Use disposable test identities only, and remove their Auth accounts and invitation records after manual tests. Database tests use rollback transactions.
 
 ### Sharing a preview while hosting everything on the Mac
 
@@ -119,11 +119,11 @@ VITE_LOCAL_PREVIEW=true LOCAL_PREVIEW_HOST=<generated-hostname> npm run dev -- -
 
 Set the invitation function’s `ORGANIZER_SITE_URL` to the generated HTTPS origin. Add that exact origin’s `/organizers/register`, `/organizers/accept`, and `/organizers/recovery` URLs to local Supabase Auth’s redirect allowlist and restart local Supabase with data preserved to apply it. These are temporary runtime settings; keep the generated hostname out of committed configuration. Restart the locally served invitation function after changing its environment. Keep public signup disabled.
 
-Local email messages remain in the Mac’s Mailpit inbox; the tunnel does not expose that inbox. An admin can invite a test email, copy its personal registration link from the local inbox, and forward that link to the chosen tester. Do not claim an email was delivered to a real inbox when using local Mailpit. Shared demo accounts are for fake data only, and their changes are visible to other testers. Keep demo credentials and temporary tester messages out of Git.
+An admin can authorize a test email, copy its private registration link from Administration, and forward that link to the chosen tester manually. Shared demo accounts are for fake data only, and their changes are visible to other testers. Keep demo credentials, invitation links, and temporary tester messages out of Git.
 
 ### Workspace release checks
 
-Run `npm test`, `npm run build`, and `npm run db:test`. The frontend test command also runs the invitation-handler unit tests; the Edge Function entrypoint uses the Supabase Deno runtime. Deploy migrations, then the function (`npx supabase functions deploy organizer-invite`), email templates, server secrets/site origin, and redirect settings before releasing the frontend. Do not reset production data. Verify an invited organizer can onboard, read all groups, and edit only joined groups; verify an organizer without groups and an admin outside a group cannot edit its content.
+Run `npm test`, `npm run build`, and `npm run db:test`. The frontend test command also runs the invitation-handler unit tests; the Edge Function entrypoint uses the Supabase Deno runtime. Deploy migrations, then the function (`npx supabase functions deploy organizer-invite`), server secrets/site origin, and redirect settings before releasing the frontend. SMTP and email-template changes are not part of this release. Do not reset production data. Verify an admin can generate and copy a link without sending email, an invited organizer can onboard, read all groups, and edit only joined groups; verify an organizer without groups and an admin outside a group cannot edit its content.
 
 The countdown uses the next valid public event in `src/events.ts`, in Europe/Rome time. It shows an underway state until the event ends, then advances or displays an empty state. Change event data through the existing release process. The workspace privacy notice is `/organizers/privacy`; its purposes are separate from interest-list consent, whose notice version remains unchanged.
 

@@ -19,35 +19,34 @@ function Login({ client }: { client: SupabaseClient }) {
   const [recovery, setRecovery] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
   function toggleRecovery() {
     setRecovery(!recovery)
     setError('')
-    setMessage('')
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
     setBusy(true)
     setError('')
-    setMessage('')
     try {
       const email = String(data.get('email')).trim().toLowerCase()
-      const result = recovery
-        ? await client.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/organizers/recovery` })
-        : await client.auth.signInWithPassword({ email, password: String(data.get('password')) })
-      if (result.error) setError(recovery ? 'Could not request a reset email. Please try again later.' : 'Could not sign in. Check your email and password.')
-      else if (recovery) setMessage('If this email has an account, a password reset link will arrive shortly.')
+      const result = await client.auth.signInWithPassword({ email, password: String(data.get('password')) })
+      if (result.error) setError('Could not sign in. Check your email and password.')
     } catch { setError('Could not connect. Please try again.') }
     finally { setBusy(false) }
   }
+  if (recovery) return <section className="workspace-auth interest-wrap workspace-login" aria-labelledby="organizer-recovery-title">
+    <p className="eyebrow">Account help</p><h1 id="organizer-recovery-title">Reset your password.</h1>
+    <p>Ask a club admin for a private password setup link. The club sends these links manually to your account email address.</p>
+    <button type="button" className="workspace-text-button" onClick={toggleRecovery}>Back to sign in</button>
+  </section>
   return <section className="workspace-auth interest-wrap workspace-login" aria-labelledby="organizer-login-title">
     <div className="interest-card-top">
       <p className="eyebrow">The people behind the club</p>
       <span className="interest-card-mark" aria-hidden="true">↗</span>
     </div>
-    <h1 id="organizer-login-title">{recovery ? 'Reset your password.' : 'Welcome back.'}</h1>
-    <p className="interest-card-description workspace-login-description">{recovery ? 'We’ll email you a link to choose a new password.' : 'An invitation-only space to see what our working groups are doing.'}</p>
+    <h1 id="organizer-login-title">Welcome back.</h1>
+    <p className="interest-card-description workspace-login-description">An invitation-only space to see what our working groups are doing.</p>
     <form onSubmit={submit} className="workspace-form workspace-login-form">
       <div className="form-field">
         <div className="form-label-row"><label htmlFor="organizer-email">Email</label><span className="field-required">Required</span></div>
@@ -56,21 +55,17 @@ function Login({ client }: { client: SupabaseClient }) {
           <input id="organizer-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required maxLength={320} />
         </div>
       </div>
-      {!recovery && <div className="form-field">
+      <div className="form-field">
         <div className="form-label-row"><label htmlFor="organizer-password">Password</label><button type="button" className="workspace-text-button workspace-forgot-password" onClick={toggleRecovery}>Forgot your password?</button></div>
         <div className="form-input-wrap">
           <svg className="form-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /><circle cx="12" cy="15.5" r="1" /></svg>
           <input id="organizer-password" name="password" type="password" autoComplete="current-password" placeholder="Enter your password" required />
         </div>
-      </div>}
+      </div>
       {error && <p role="alert" className="form-error">{error}</p>}
-      {message && <p role="status" className="workspace-login-status">{message}</p>}
-      <button className="button button-dark workspace-sign-in" disabled={busy}>{busy ? 'Please wait…' : recovery ? 'Send reset link' : 'Sign in'}</button>
+      <button className="button button-dark workspace-sign-in" disabled={busy}>{busy ? 'Please wait…' : 'Sign in'}</button>
     </form>
-    <div className="workspace-login-footer">{recovery
-      ? <button type="button" className="workspace-text-button" onClick={toggleRecovery}>Back to sign in</button>
-      : <p>New to the workspace? <a href="/organizers/register">Create your account</a></p>}
-    </div>
+    <div className="workspace-login-footer"><p>New to the workspace? <a href="/organizers/register">Create your account</a></p></div>
   </section>
 }
 
