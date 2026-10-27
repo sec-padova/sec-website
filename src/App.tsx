@@ -1,3 +1,4 @@
+import useScrollReveal from './hooks/useScrollReveal'
 import MemberDirectory from "./MemberDirectory"
 import InterestForm from "./components/InterestForm"
 import ClubEvents from "./ClubEvents"
@@ -10,6 +11,7 @@ import { lazy, Suspense } from 'react'
 const OrganizerArea = lazy(() => import('./organizers/OrganizerArea'))
 
 export default function App() {
+  const mainRef = useScrollReveal()
   if (window.location.pathname === '/organizers' || window.location.pathname.startsWith('/organizers/')) {
     return <Suspense fallback={<main className="section-wrap"><p role="status">Loading organizer workspace…</p></main>}><OrganizerArea /></Suspense>
   }
@@ -38,7 +40,7 @@ export default function App() {
       </a>
     </header>
 
-    <main id="main">
+    <main id="main" ref={mainRef}>
       <section className="hero section-wrap" id="top" aria-labelledby="hero-title">
         <div className="hero-copy">
           <p className="eyebrow"><span className="eyebrow-line"></span> Made by students, in Padova</p>
@@ -77,11 +79,11 @@ export default function App() {
       </div>
 
       <section className="about section-wrap section-pad" id="about" aria-labelledby="about-title">
-        <div className="section-intro">
+        <div className="section-intro" data-reveal>
           <p className="eyebrow">01 / Why we exist</p>
           <h2 id="about-title">The next idea could start with <em>someone you haven’t met yet.</em></h2>
         </div>
-        <div className="about-body">
+        <div className="about-body" data-reveal data-reveal-delay="80">
           <p>
             Startup stories can feel far away from university life. We’re bringing them closer:
             making room to learn from people building things, ask questions, and try ideas together.
@@ -96,7 +98,7 @@ export default function App() {
 
       <section className="work section-pad" id="what-we-do" aria-labelledby="work-title">
         <div className="section-wrap">
-          <div className="section-heading-row">
+          <div className="section-heading-row" data-reveal>
             <div>
               <p className="eyebrow">02 / What we do</p>
               <h2 id="work-title">From “what if?”<br />to <em>“let’s try.”</em></h2>
@@ -104,19 +106,19 @@ export default function App() {
             <p>Three ways to get started. No founder title required.</p>
           </div>
           <div className="feature-grid">
-            <article className="feature-card">
+            <article className="feature-card" data-reveal data-reveal-delay="0">
               <div className="feature-top"><span>01</span><span aria-hidden="true">↗︎</span></div>
               <div className="feature-symbol" aria-hidden="true">✳︎</div>
               <h3>Come to events</h3>
               <p>Get closer to the startup world through events, conversations, and people willing to share what they’ve learned.</p>
             </article>
-            <article className="feature-card">
+            <article className="feature-card" data-reveal data-reveal-delay="80">
               <div className="feature-top"><span>02</span><span aria-hidden="true">↗︎</span></div>
               <div className="feature-symbol intersect" aria-hidden="true"><i></i><i></i></div>
               <h3>Meet your people</h3>
               <p>Network with students from other departments and bring different skills and perspectives to the same table.</p>
             </article>
-            <article className="feature-card">
+            <article className="feature-card" data-reveal data-reveal-delay="160">
               <div className="feature-top"><span>03</span><span aria-hidden="true">↗︎</span></div>
               <div className="feature-symbol arrow-symbol" aria-hidden="true">↗︎</div>
               <h3>Build together</h3>
@@ -129,7 +131,7 @@ export default function App() {
       <ClubEvents events={events} />
 
       <section className="community section-wrap section-pad" id="community" aria-labelledby="community-title">
-        <div className="community-art" aria-hidden="true">
+        <div className="community-art" data-reveal aria-hidden="true">
           <span className="community-orbit orbit-a"></span>
           <span className="community-orbit orbit-b"></span>
           <span className="community-orbit orbit-c"></span>
@@ -140,7 +142,7 @@ export default function App() {
           <span className="community-dot dot-e"></span>
           <span className="community-word">YOU<br />BELONG<br />HERE<span>.</span></span>
         </div>
-        <div className="community-copy">
+        <div className="community-copy" data-reveal data-reveal-delay="80">
           <p className="eyebrow">04 / Who it’s for</p>
           <h2 id="community-title">Bring your<br /><em>curiosity.</em></h2>
           <p>
@@ -157,7 +159,7 @@ export default function App() {
       </section>
 
       <section className="connection section-pad" aria-labelledby="connection-title">
-        <div className="section-wrap connection-inner">
+        <div className="section-wrap connection-inner" data-reveal>
           <p className="eyebrow">Built in Padova / Connected beyond campus</p>
           <h2 id="connection-title">Student energy meets <em>real world experience.</em></h2>
           <p>
@@ -176,7 +178,7 @@ export default function App() {
       </section>
 
       <section className="team section-wrap section-pad" id="team" aria-labelledby="team-title">
-        <div className="section-heading-row">
+        <div className="section-heading-row" data-reveal>
           <div>
             <p className="eyebrow">05 / The people</p>
             <h2 id="team-title">A club made of<br /><em>different minds.</em></h2>
@@ -188,12 +190,12 @@ export default function App() {
 
       <section className="last-cta section-pad" id="join" aria-labelledby="cta-title">
         <div className="section-wrap join-layout">
-          <div className="join-intro">
+          <div className="join-intro" data-reveal>
             <p className="eyebrow">The conversation starts here</p>
             <h2 id="cta-title">The next idea<br />needs <em>you.</em></h2>
             <p className="join-description">Curious about joining a community of students and builders in Padova? Leave your email to hear from us when membership opens.</p>
           </div>
-          <div className="interest-wrap">
+          <div className="interest-wrap" data-reveal>
             <div className="interest-card-top"><p className="eyebrow">Let’s stay in touch</p><span className="interest-card-mark" aria-hidden="true">↗</span></div>
             <h3>Join the interest list</h3>
             <p className="interest-card-description">Your email is all you need to get started.</p>

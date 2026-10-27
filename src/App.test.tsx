@@ -1,10 +1,16 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
 vi.mock('./lib/supabase', () => ({ supabase: null }))
 
 describe('landing page', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-20T12:00:00+02:00'))
+  })
+  afterEach(() => vi.useRealTimers())
+
   it('keeps the club invitation and approved collaborators visible', () => {
     render(<App />)
     expect(screen.getByRole('heading', { level: 1, name: /ideas move when people meet/i })).toBeInTheDocument()
@@ -14,9 +20,11 @@ describe('landing page', () => {
     expect(screen.getByRole('link', { name: /github/i })).toHaveAttribute('href', 'https://github.com/sec-padova')
     expect(screen.getByRole('link', { name: 'Events' })).toHaveAttribute('href', '#events')
     expect(screen.getByRole('heading', { name: /meet us at the next event/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Student E-club: first meeting' })).toBeInTheDocument()
-    expect(screen.getAllByText('18:30–20:00 · Padova time')).toHaveLength(2)
-    expect(screen.getAllByRole('link').some((link) => link.getAttribute('href') === 'https://luma.com/30216joq')).toBe(true)
+    expect(screen.getByRole('heading', { name: 'Dead Startup Society' })).toBeInTheDocument()
+    expect(screen.getByText('18:30 · Padova time')).toBeInTheDocument()
+    expect(screen.getByText('28 Oct 2026')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /register on luma/i })).toHaveAttribute('href', 'https://luma.com/event/evt-dOCZWZIBbDHxJN2')
+    expect(screen.getAllByRole('link').some((link) => link.getAttribute('href') === 'https://luma.com/30216joq')).toBe(false)
     expect(screen.getByRole('heading', { name: 'Student Entrepreneurs Club — Launch Night' })).toBeInTheDocument()
     expect(screen.getAllByRole('link').some((link) => link.getAttribute('href') === 'https://luma.com/pf6b3exb')).toBe(true)
     expect(screen.queryAllByRole('link', { name: /launch event/i })).toHaveLength(0)

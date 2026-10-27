@@ -9,7 +9,7 @@ export function nextWorkspaceEvent(events: ClubEvent[], now: number) {
     try {
       return event.title.trim() && event.location.trim() && event.description.trim()
         && Number.isFinite(start) && Number.isFinite(end) && end >= start && end >= now
-        && new URL(event.url).protocol === 'https:'
+        && (event.url === undefined || new URL(event.url).protocol === 'https:')
     } catch { return false }
   }).sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))[0]
 }
