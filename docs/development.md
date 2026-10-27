@@ -125,6 +125,8 @@ An admin can authorize a test email, copy its private registration link from Adm
 
 Run `npm test`, `npm run build`, and `npm run db:test`. The frontend test command also runs the invitation-handler unit tests; the Edge Function entrypoint uses the Supabase Deno runtime. Deploy migrations, then the function (`npx supabase functions deploy organizer-invite`), server secrets/site origin, and redirect settings before releasing the frontend. SMTP and email-template changes are not part of this release. Do not reset production data. Verify an admin can generate and copy a link without sending email, an invited organizer can onboard, read all groups, and edit only joined groups; verify an organizer without groups and an admin outside a group cannot edit its content.
 
+Apply `20261027010000_workspace_conflict_status.sql` as well. Revision conflicts return `PT409` / HTTP 409. Do not use SQLSTATE `40001` for application conflicts: [Supabase documents automatic retries](https://supabase.com/kb/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions) that can hang API requests. Verify stale edits through the HTTP API, in addition to the SQL tests.
+
 The countdown uses the next valid public event in `src/events.ts`, in Europe/Rome time. It shows an underway state until the event ends, then advances or displays an empty state. Change event data through the existing release process. The workspace privacy notice is `/organizers/privacy`; its purposes are separate from interest-list consent, whose notice version remains unchanged.
 
 ## Interest list

@@ -53,7 +53,7 @@ export interface AdminAccess {
 export class WorkspaceError extends Error {
   code: string
   constructor(code: string) {
-    super(code === '40001'
+    super(['PT409', '40001'].includes(code)
       ? 'This information changed while you were editing. Refresh, then load the latest version before saving. Your text has been kept.'
       : code === '42501'
         ? 'Your access changed. Refresh or sign in again.'

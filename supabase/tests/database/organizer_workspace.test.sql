@@ -73,7 +73,7 @@ select set_config('request.jwt.claim.sub', '71000000-0000-0000-0000-000000000003
 select lives_ok($$select public.set_organizer_membership('81000000-0000-0000-0000-000000000001',true)$$, 'second member joins Spaces');
 select set_config('request.jwt.claim.sub', '71000000-0000-0000-0000-000000000002', true);
 select lives_ok($$select public.save_member_work('81000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000003','Calling venues','Visit two locations',1)$$, 'members can edit a peer in their group');
-select throws_ok($$select public.save_member_work('81000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000003','Overwrite','',1)$$, '40001', 'Work changed; refresh before saving', 'stale revision cannot overwrite a summary');
+select throws_ok($$select public.save_member_work('81000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000003','Overwrite','',1)$$, 'PT409', 'Work changed; refresh before saving', 'stale revision cannot overwrite a summary');
 select lives_ok($$select public.publish_group_update('81000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000003','Two venues contacted')$$, 'group member can publish an update about another member');
 select throws_ok($$select public.publish_group_update('81000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000005','Wrong member')$$, '22023', 'Group member required', 'update subject must belong to that group');
 select throws_ok($$select public.save_member_work('81000000-0000-0000-0000-000000000002','71000000-0000-0000-0000-000000000004','Cross-group','',1)$$, '42501', 'Group membership required', 'cannot write another group');
@@ -90,7 +90,7 @@ select lives_ok($$select public.set_organizer_membership('81000000-0000-0000-000
 select lives_ok($$select public.save_member_work('81000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000003','Visiting venues','Confirm availability',2)$$, 'admin group member has normal content editing permission');
 select lives_ok($$select public.set_organizer_membership('81000000-0000-0000-0000-000000000002',true,'71000000-0000-0000-0000-000000000004')$$, 'admin assigns another organizer');
 select lives_ok($$select public.admin_save_group('Test Events','Find speakers','81000000-0000-0000-0000-000000000002',1,true)$$, 'admin archives group');
-select throws_ok($$select public.admin_save_group('Overwrite','Wrong','81000000-0000-0000-0000-000000000002',1,false)$$, '40001', 'Group changed; refresh before saving', 'group settings reject stale revisions');
+select throws_ok($$select public.admin_save_group('Overwrite','Wrong','81000000-0000-0000-0000-000000000002',1,false)$$, 'PT409', 'Group changed; refresh before saving', 'group settings reject stale revisions');
 
 select set_config('request.jwt.claim.sub', '71000000-0000-0000-0000-000000000004', true);
 select lives_ok('select public.organizer_workspace()', 'archived groups remain readable');

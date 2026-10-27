@@ -251,7 +251,7 @@ describe('working group overview', () => {
     window.history.replaceState({}, '', '/organizers')
     const { client, rpc, workspace } = fixture()
     const original = rpc.getMockImplementation()!
-    rpc.mockImplementation(async (name: string, args?: Record<string, unknown>) => name === 'save_member_work' ? { data: null, error: { code: '40001' } } : original(name, args))
+    rpc.mockImplementation(async (name: string, args?: Record<string, unknown>) => name === 'save_member_work' ? { data: null, error: { code: 'PT409' } } : original(name, args))
     render(<OrganizerArea client={client} />)
     const dialog = await editEnrico()
     fireEvent.change(screen.getByRole('textbox', { name: 'Working on' }), { target: { value: 'My unsaved draft' } })
