@@ -5,8 +5,14 @@ import { events } from "./events"
 import { supabase } from "./lib/supabase"
 import { members } from "./members"
 import PrivacyPage from "./PrivacyPage"
+import { lazy, Suspense } from 'react'
+
+const OrganizerArea = lazy(() => import('./organizers/OrganizerArea'))
 
 export default function App() {
+  if (window.location.pathname === '/organizers' || window.location.pathname.startsWith('/organizers/')) {
+    return <Suspense fallback={<main className="section-wrap"><p role="status">Loading organizer workspace…</p></main>}><OrganizerArea /></Suspense>
+  }
   if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy/') {
     return <PrivacyPage />
   }
@@ -206,6 +212,7 @@ export default function App() {
         <p>Curiosity is better together.<br />Padova, Italy.</p>
         <a className="social-link" href="https://github.com/sec-padova" target="_blank" rel="noopener noreferrer">GitHub ↗︎</a>
         <a href="/privacy">Privacy notice</a>
+        <a href="/organizers">Organizer sign-in</a>
         <a href="#top">Back to top ↑</a>
       </div>
     </footer>

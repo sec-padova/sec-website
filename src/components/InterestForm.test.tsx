@@ -40,8 +40,9 @@ describe('club interest list', () => {
     giveConsent()
     fireEvent.click(screen.getByRole('button', { name: 'Join the interest list' }))
     await waitFor(() => expect(rpc).toHaveBeenCalledWith('join_interest_list', { p_email: 'ada@example.com', p_phone_number: null, ...consentPayload }))
-    expect(screen.getByRole('status')).toHaveTextContent(/invitation to join the club later/i)
-    expect(screen.getByRole('status')).not.toHaveTextContent(/account/i)
+    const status = await screen.findByRole('status')
+    expect(status).toHaveTextContent(/invitation to join the club later/i)
+    expect(status).not.toHaveTextContent(/account/i)
   })
 
   it.each([
@@ -62,7 +63,7 @@ describe('club interest list', () => {
     giveConsent()
     fireEvent.click(screen.getByRole('button', { name: 'Join the interest list' }))
     await waitFor(() => expect(rpc).toHaveBeenCalledWith('join_interest_list', { p_email: 'ada@example.com', p_phone_number: normalized, ...consentPayload }))
-    expect(screen.getByRole('status')).toHaveTextContent('Thanks for your interest')
+    expect(await screen.findByRole('status')).toHaveTextContent('Thanks for your interest')
   })
 
   it.each(['123', '+999 123456789', 'Call me at +44 20 7946 0958', '+44 20 7946 0958 ext. 123', '+442079460958123456789'])('rejects malformed phone input: %s', phone => {

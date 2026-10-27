@@ -11,8 +11,8 @@ export type ClubEvent = {
 export const events: ClubEvent[] = [
   {
     title: 'Student E-club: first meeting',
-    startsAt: '2026-10-20T18:30:00+02:00',
-    endsAt: '2026-10-20T20:00:00+02:00',
+    startsAt: '2026-10-27T18:30:00+01:00',
+    endsAt: '2026-10-27T20:00:00+01:00',
     location: 'Address shared after registration',
     description: 'The club’s first meeting. Register on Luma to see the address and event details.',
     url: 'https://luma.com/30216joq',
