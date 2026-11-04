@@ -1,10 +1,8 @@
 import useScrollReveal from './hooks/useScrollReveal'
-import MemberDirectory from "./MemberDirectory"
 import InterestForm from "./components/InterestForm"
 import ClubEvents from "./ClubEvents"
 import { events } from "./events"
 import { supabase } from "./lib/supabase"
-import { members } from "./members"
 import PrivacyPage from "./PrivacyPage"
 import { lazy, Suspense } from 'react'
 
@@ -33,7 +31,6 @@ export default function App() {
         <a href="#what-we-do">What we do</a>
         <a href="#events">Events</a>
         <a href="#community">Community</a>
-        <a href="#team">People</a>
       </nav>
       <a className="header-cta" href="#join">
         Join the list <span aria-hidden="true">↘︎</span>
@@ -175,17 +172,6 @@ export default function App() {
             </a>
           </div>
         </div>
-      </section>
-
-      <section className="team section-wrap section-pad" id="team" aria-labelledby="team-title">
-        <div className="section-heading-row" data-reveal>
-          <div>
-            <p className="eyebrow">05 / The people</p>
-            <h2 id="team-title">A club made of<br /><em>different minds.</em></h2>
-          </div>
-          <p>Every person brings a new perspective. Meet the students and curious people building this community together.</p>
-        </div>
-        <MemberDirectory members={members} />
       </section>
 
       <section className="last-cta section-pad" id="join" aria-labelledby="cta-title">

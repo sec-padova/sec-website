@@ -45,7 +45,7 @@ The member data model is reserved for the invitation phase. Supabase Auth will m
 
 Department will be optional for students and external members when profiles open. Use the shared select component in profile onboarding, with options from `public.unipd_departments`; the database rejects values outside that list. Its 32 English names follow the [University of Padova department list](https://www.unipd.it/en/dipartimenti), checked on 25 September 2026. Review the list when the university changes its departments.
 
-The public directory contains only approved members who explicitly opt in. Do not add a private member roster to source files.
+The public website does not display a member directory. The reserved database model still restricts public profile access to approved members who explicitly opt in. Do not add a private member roster to source files.
 
 ## Organizer workspace
 

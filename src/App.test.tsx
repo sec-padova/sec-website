@@ -30,14 +30,6 @@ describe('landing page', () => {
     expect(screen.queryAllByRole('link', { name: /launch event/i })).toHaveLength(0)
   })
 
-  it('shows a private-by-default placeholder directory that can be expanded', () => {
-    render(<App />)
-    const toggle = screen.getByText('Explore the member directory')
-    expect(toggle.closest('details')).toBeInTheDocument()
-    expect(screen.getByText('Names coming soon')).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Club member list' })).toBeInTheDocument()
-  })
-
   it('takes join links to the interest section and explains setup state', () => {
     render(<App />)
     expect(screen.getAllByRole('link', { name: /join the (interest )?list/i }).every((link) => link.getAttribute('href') === '#join')).toBe(true)
