@@ -47,6 +47,20 @@ describe('shared organizer registration', () => {
     expect((await handler(new Request('https://api.example.org', { method: 'OPTIONS', headers: { origin: 'https://evil.example' } }))).status).toBe(403)
     expect(deps.check).not.toHaveBeenCalled()
   })
+  it('reports database safety errors as server failures rather than revoked access', async () => {
+    const { request } = fixture({ manage: vi.fn().mockResolvedValue({ error: { code: '21000' } }) })
+    const response = await request({ action: 'create-link' })
+    expect(response.status).toBe(500)
+    const body = await response.json()
+    expect(body.error).toContain('server error')
+    expect(body.error).not.toMatch(/revoked|restore/i)
+  })
+  it('distinguishes an invalid session from a missing admin grant', async () => {
+    const { request } = fixture({ manage: vi.fn().mockResolvedValue({ error: { code: 'SESSION_INVALID' } }) })
+    const response = await request({ action: 'create-link' })
+    expect(response.status).toBe(401)
+    expect((await response.json()).error).toContain('session')
+  })
   it('returns a fragment link only after admin authorization', async () => {
     const { request, deps } = fixture()
     expect(await (await request({ action: 'create-link' })).json()).toMatchObject({ invitation_url: `https://sec.example.org/organizers/register#join=${token}` })

@@ -27,7 +27,12 @@ Deno.serve(createRegistrationHandler({
   async manage(jwt, hash, revoke) {
     const caller = createClient(url, key, { ...options, global: { headers: { Authorization: `Bearer ${jwt}` } } })
     const { data, error } = await caller.auth.getUser(jwt)
-    if (error || !data.user) return { error: { code: '42501' } }
-    return await caller.rpc('admin_registration_link', { p_hash: hash, p_revoke: revoke })
+    if (error || !data.user) {
+      console.error('organizer_link_auth_failed', { code: error?.code, status: error?.status })
+      return { error: { code: 'SESSION_INVALID' } }
+    }
+    const result = await caller.rpc('admin_registration_link', { p_hash: hash, p_revoke: revoke })
+    if (result.error) console.error('organizer_link_rpc_failed', { code: result.error.code })
+    return result
   },
 }))

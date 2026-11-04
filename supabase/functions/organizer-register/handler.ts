@@ -18,8 +18,13 @@ export function createRegistrationHandler(deps: RegistrationDependencies) {
     const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': origin && origins.has(origin) ? origin : site.origin,
       'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info', 'Access-Control-Allow-Methods': 'POST, OPTIONS', Vary: 'Origin' }
     const respond = (status: number, body: object) => new Response(JSON.stringify(body), { status, headers })
-    const failure = (error: { code?: string }) => respond(error.code === 'PT410' ? 410 : error.code === 'PT429' ? 429 : 403,
-      { error: error.code === 'PT410' ? 'This registration link has expired or been revoked. Ask the admin for a new link.' : error.code === 'PT429' ? 'Too many attempts. Please retry in 15 minutes.' : 'Access unavailable. Ask the admin to restore your access if it was revoked.' })
+    const failure = (error: { code?: string }) => {
+      if (error.code === 'PT410') return respond(410, { error: 'This registration link has expired or been revoked. Ask the admin for a new link.' })
+      if (error.code === 'PT429') return respond(429, { error: 'Too many attempts. Please retry in 15 minutes.' })
+      if (error.code === 'SESSION_INVALID') return respond(401, { error: 'Your session could not be verified. Sign out and sign in again.' })
+      if (error.code === '42501') return respond(403, { error: 'Access unavailable. Ask the admin to restore your access if it was revoked.' })
+      return respond(500, { error: 'Could not complete this request because of a server error. Please try again.' })
+    }
     if (origin && !origins.has(origin)) return respond(403, { error: 'Origin not allowed' })
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers })
     if (request.method !== 'POST') return respond(405, { error: 'POST required' })
