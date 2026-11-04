@@ -111,9 +111,12 @@ select set_config('request.jwt.claim.sub', '71000000-0000-0000-0000-000000000001
 select lives_ok($$select public.admin_save_group('Test Events','Find speakers','81000000-0000-0000-0000-000000000002',2,false)$$, 'admin reopens group');
 select lives_ok($$select public.admin_save_group('New group','New mission')$$, 'admin creates a group');
 select throws_ok($$select public.admin_revoke_organizer('71000000-0000-0000-0000-000000000001')$$, '22023', 'Cannot revoke the last admin', 'last admin cannot be revoked');
-select lives_ok($$select public.admin_prepare_organizer_invitation(' RETRY@example.com ')$$, 'admin prepares normalized invitation');
-select lives_ok($$select public.admin_prepare_organizer_invitation('retry@example.com')$$, 'duplicate preparation is idempotent');
-select lives_ok($$select public.admin_prepare_organizer_invitation('workspace-outsider@example.com')$$, 'admin can authorize existing Auth account');
+select throws_ok($$select public.admin_prepare_organizer_invitation(' RETRY@example.com ')$$, '42501', 'Authorized account required', 'recovery cannot invite a new account');
+reset role;
+insert into private.workspace_invitations(email) values ('retry@example.com');
+set local role authenticated;
+select throws_ok($$select public.admin_prepare_organizer_invitation('retry@example.com')$$, '42501', 'Authorized account required', 'pending authorization cannot create recovery');
+select throws_ok($$select public.admin_prepare_organizer_invitation('workspace-outsider@example.com')$$, '42501', 'Authorized account required', 'recovery cannot authorize an existing outsider');
 select lives_ok($$select public.admin_revoke_organizer(null,'retry@example.com')$$, 'failed or pending invitation can be revoked');
 select lives_ok($$select public.admin_revoke_organizer('71000000-0000-0000-0000-000000000002')$$, 'admin revokes organizer');
 select set_config('request.jwt.claim.sub', '71000000-0000-0000-0000-000000000002', true);

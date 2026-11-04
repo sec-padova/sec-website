@@ -5,7 +5,6 @@ export interface InvitationDependencies {
   allowedOrigins?: string[]
   authorize: (token: string) => Promise<boolean>
   prepare: (token: string, email: string) => Promise<Result<{ email: string, user_id: string | null }>>
-  isConfirmed: (id: string) => Promise<boolean>
   generate: (email: string, type: 'invite' | 'recovery', redirectTo: string) => Promise<Result<{ hashed_token: string }>>
 }
 
@@ -41,15 +40,15 @@ export function createInvitationHandler(dependencies: InvitationDependencies) {
       }
       const prepared = await dependencies.prepare(token, email.trim().toLowerCase())
       if (prepared.error || !prepared.data) return respond(403, { error: 'Invitation could not be prepared' })
+      if (!prepared.data.user_id) return respond(403, { error: 'Authorized account required' })
       // The database resolves existing accounts by email; the request cannot pick a user ID.
-      const existing = prepared.data.user_id && await dependencies.isConfirmed(prepared.data.user_id)
-      const type = existing ? 'recovery' : 'invite'
-      const link = new URL(existing ? '/organizers/recovery' : '/organizers/register', site)
+      const type = 'recovery' as const
+      const link = new URL('/organizers/recovery', site)
       const result = await dependencies.generate(prepared.data.email, type, link.href)
-      if (result.error || !result.data?.hashed_token) return respond(502, { error: 'Could not create the link. The invitation is saved; please retry.' })
+      if (result.error || !result.data?.hashed_token) return respond(502, { error: 'Could not create the password recovery link. Please retry.' })
       link.searchParams.set('token_hash', result.data.hashed_token)
       link.searchParams.set('type', type)
-      return respond(200, { message: 'Private link ready. Send it directly to the invited person.', email: prepared.data.email, invitation_url: link.href })
+      return respond(200, { message: 'Private password recovery link ready. Send it directly to the account owner.', email: prepared.data.email, invitation_url: link.href })
     } catch {
       return respond(502, { error: 'Could not create the link. Please retry.' })
     }

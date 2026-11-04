@@ -5,6 +5,7 @@ import { privacyController } from '../privacy'
 import { workspaceRpc, type OrganizerContext } from './api'
 import OrganizerWorkspace from './OrganizerWorkspace'
 import OrganizerPrivacy from './OrganizerPrivacy'
+import SharedRegistration from './SharedRegistration'
 
 function OrganizerShell({ children }: { children: ReactNode }) {
   return <main className="organizer-page section-wrap">
@@ -73,13 +74,13 @@ function RegistrationEntry() {
   return <section className="workspace-auth" aria-labelledby="organizer-registration-title">
     <p className="eyebrow">Join the people behind the club</p>
     <h1 id="organizer-registration-title">Create your account.</h1>
-    <p>A club admin chooses who can join this invitation-only workspace. Ask an admin to invite your email address, then open the Create your account link in that email.</p>
+    <p>A club admin chooses who can join this invitation-only workspace. Ask the admin for a shared registration link, then open it before it expires.</p>
     <p>Your invitation lets you choose a password, add your name, and join working groups. No separate approval is needed after you register.</p>
     <a className="button button-dark" href="/organizers">Back to sign in</a>
   </section>
 }
 
-function AccountSetup({ client, onboarding, onComplete }: { client: SupabaseClient, onboarding: boolean, onComplete: () => Promise<void> }) {
+function AccountSetup({ client, onboarding, passwordRequired = true, onComplete }: { client: SupabaseClient, onboarding: boolean, passwordRequired?: boolean, onComplete: () => Promise<void> }) {
   const [groups, setGroups] = useState<{ id: string, name: string, mission: string }[]>([])
   const [selected, setSelected] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
@@ -99,16 +100,18 @@ function AccountSetup({ client, onboarding, onComplete }: { client: SupabaseClie
     const form = new FormData(event.currentTarget)
     setError('')
     const password = String(form.get('password'))
-    if (password !== form.get('confirm-password')) {
+    if (passwordRequired && password !== form.get('confirm-password')) {
       setError('Your passwords do not match.')
       return
     }
     setBusy(true)
     try {
-      const { error: passwordError } = await client.auth.updateUser({ password })
-      if (passwordError) {
-        setError('Could not set your password. Use at least 12 characters and try again.')
-        return
+      if (passwordRequired) {
+        const { error: passwordError } = await client.auth.updateUser({ password })
+        if (passwordError) {
+          setError('Could not set your password. Use at least 12 characters and try again.')
+          return
+        }
       }
       if (onboarding) await workspaceRpc(client, 'complete_organizer_onboarding', {
         p_first_name: String(form.get('first-name')).trim(), p_last_name: String(form.get('last-name')).trim(), p_group_ids: selected,
@@ -119,14 +122,14 @@ function AccountSetup({ client, onboarding, onComplete }: { client: SupabaseClie
   }
   return <section className="workspace-auth" aria-labelledby="organizer-setup-title">
     <p className="eyebrow">Let’s get you settled</p><h1 id="organizer-setup-title">{onboarding ? 'Create your account.' : 'Choose a new password.'}</h1>
-    {onboarding && <p>Your invitation gives you access to the workspace. Choose a password and add your name so the team can see who’s working on what. You can join groups now or later.</p>}
+    {onboarding && <p>Add your name so the team can see who’s working on what. You can join groups now or later.</p>}
     <form onSubmit={submit} className="workspace-form">
       {onboarding && <>
         <label htmlFor="organizer-first-name">First name</label><input id="organizer-first-name" name="first-name" autoComplete="given-name" required maxLength={100} pattern=".*\S.*" />
         <label htmlFor="organizer-last-name">Last name</label><input id="organizer-last-name" name="last-name" autoComplete="family-name" required maxLength={100} pattern=".*\S.*" />
       </>}
-      <label htmlFor="setup-password">Password (at least 12 characters)</label><input id="setup-password" name="password" type="password" autoComplete="new-password" required minLength={12} />
-      <label htmlFor="setup-confirm-password">Confirm password</label><input id="setup-confirm-password" name="confirm-password" type="password" autoComplete="new-password" required minLength={12} />
+      {passwordRequired && <><label htmlFor="setup-password">Password (at least 12 characters)</label><input id="setup-password" name="password" type="password" autoComplete="new-password" required minLength={12} />
+      <label htmlFor="setup-confirm-password">Confirm password</label><input id="setup-confirm-password" name="confirm-password" type="password" autoComplete="new-password" required minLength={12} /></>}
       {onboarding && <fieldset className="workspace-group-choices"><legend>Your working groups (optional)</legend>
         {choicesLoading && <p role="status">Loading working groups…</p>}
         {choicesError && <p role="alert">Could not load groups. <button type="button" onClick={() => void loadChoices()}>Retry</button></p>}
@@ -154,6 +157,9 @@ export default function OrganizerArea({ client = supabase }: { client?: Supabase
   const [error, setError] = useState('')
   const [nonce, setNonce] = useState(0)
   const [passwordReady, setPasswordReady] = useState(false)
+  const [joinToken] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('join'))
+  const [joined, setJoined] = useState(false)
+  useEffect(() => { if (joinToken) window.history.replaceState({}, '', window.location.pathname + window.location.search) }, [joinToken])
   const [token] = useState(() => new URLSearchParams(window.location.search).get('token_hash'))
   const [tokenType] = useState(() => new URLSearchParams(window.location.search).get('type'))
   const [verified, setVerified] = useState(false)
@@ -249,11 +255,12 @@ export default function OrganizerArea({ client = supabase }: { client?: Supabase
   if (!client) return <OrganizerShell><h1>Organizer workspace</h1><p role="status">The workspace is being set up. Please check back soon.</p></OrganizerShell>
   if (token && !verified) return <OrganizerShell><section className="workspace-auth"><p className="eyebrow">SEC Padova</p><h1>{path === '/organizers/recovery' ? 'Reset your password.' : 'Create your account.'}</h1><p>{path === '/organizers/recovery' ? 'Continue to verify your email and choose a new password.' : 'You’re invited to the organizer workspace. Continue to verify your invitation, then choose your name, password, and working groups.'}</p>{tokenError && <p className="form-error" role="alert">{tokenError}</p>}<button className="button button-dark" disabled={verifying} onClick={() => void verify()}>{verifying ? 'Verifying…' : 'Continue'}</button><p><a href="/organizers">Back to sign in</a></p></section></OrganizerShell>
   if (authLoading) return <OrganizerShell><p role="status">Restoring your session…</p></OrganizerShell>
+  if (path === '/organizers/register' && joinToken && !joined) return <OrganizerShell><SharedRegistration client={client} token={joinToken} signedIn={Boolean(session)} onComplete={() => { setJoined(true); setContext(null); setNonce(value => value + 1) }} /></OrganizerShell>
   if (!session) return <OrganizerShell>{path === '/organizers/register' ? <RegistrationEntry /> : <Login client={client} />}</OrganizerShell>
   if (error) return <OrganizerShell><p role="alert">{error}</p><button onClick={() => setNonce(nonce + 1)}>Retry</button><button onClick={() => void client.auth.signOut()}>Sign out</button></OrganizerShell>
   if (!context) return <OrganizerShell><p role="status">Checking workspace access…</p></OrganizerShell>
   if (!context.authorized) return <OrganizerShell><section className="workspace-auth"><h1>Organizer access required.</h1><p>This account does not have access. Ask a club admin for an invitation.</p><button className="button button-dark" onClick={() => void client.auth.signOut()}>Sign out</button></section></OrganizerShell>
-  if (!context.profile || (path === '/organizers/recovery' && !passwordReady)) return <OrganizerShell><AccountSetup client={client} onboarding={!context.profile} onComplete={async () => {
+  if (!context.profile || (path === '/organizers/recovery' && !passwordReady)) return <OrganizerShell><AccountSetup client={client} passwordRequired={!joined && (verified || session.user.app_metadata?.organizer_registration !== 'shared-link')} onboarding={!context.profile} onComplete={async () => {
     setPasswordReady(true)
     setContext(null)
     setNonce(value => value + 1)

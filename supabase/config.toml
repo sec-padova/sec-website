@@ -425,3 +425,7 @@ enabled = true
 [functions.organizer-invite]
 # The handler validates the user JWT and current admin grant itself.
 verify_jwt = false
+
+[functions.organizer-register]
+# Shared-token validation and admin JWT checks are performed inside the handler.
+verify_jwt = false

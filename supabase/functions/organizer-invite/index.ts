@@ -23,11 +23,6 @@ Deno.serve(createInvitationHandler({
   async prepare(token, email) {
     return await caller(token).rpc('admin_prepare_organizer_invitation', { p_email: email })
   },
-  async isConfirmed(id) {
-    const { data, error } = await admin.auth.admin.getUserById(id)
-    if (error) throw error
-    return Boolean(data.user?.email_confirmed_at)
-  },
   async generate(email, type, redirectTo) {
     const { data, error } = await admin.auth.admin.generateLink({ type, email, options: { redirectTo } })
     return { data: data.properties, error }
